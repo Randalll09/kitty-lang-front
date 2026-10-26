@@ -41,6 +41,7 @@ interface Cache {
   userId: string | null
   email: string | null
   name: string
+  inviteCode: string
   friendshipId: string | null
   partnerId: string | null
   partnerName: string
@@ -64,6 +65,7 @@ const emptyCache = (): Cache => ({
   userId: null,
   email: null,
   name: '',
+  inviteCode: '',
   friendshipId: null,
   partnerId: null,
   partnerName: '',
@@ -123,6 +125,9 @@ const MESSAGES: [RegExp, string][] = [
   [/password should be at least/i, '비밀번호는 6자 이상이어야 해요.'],
   [/email not confirmed/i, '이메일 확인이 켜져 있어요. Supabase 설정에서 Confirm email 을 꺼 주세요.'],
   [/valid email|invalid email/i, '이메일 주소를 확인해 주세요.'],
+  [/invalid invite code/i, '없는 코드예요. 친구의 코드를 다시 확인해 주세요.'],
+  [/cannot connect with yourself/i, '내 코드예요. 친구의 코드를 넣어 주세요.'],
+  [/already (paired|connected)/i, '이미 다른 사람과 이어져 있어요.'],
 ]
 
 function explain(e: unknown) {
@@ -217,22 +222,15 @@ async function flushCheers() {
 async function pull() {
   if (!supabase || !state.userId) return
   const me = state.userId
-  const mine = await supabase.from('profiles').select('display_name').eq('id', me).maybeSingle()
+  const mine = await supabase.from('profiles').select('display_name, invite_code').eq('id', me).maybeSingle()
   if (mine.error) throw mine.error
-  let fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
+  // 친구 연결은 초대 코드로만 한다(connectWithCode).
+  const fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
   if (fr.error) throw fr.error
-  if (!fr.data) {
-    // 두 사람만 쓰는 앱이라 초대 코드 없이, 아직 짝이 없는 다른 사람과 자동으로 이어진다.
-    const pair = await supabase.rpc('connect_partner')
-    if (pair.error) throw pair.error
-    if (pair.data) {
-      fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
-      if (fr.error) throw fr.error
-    }
-  }
 
   const patch: Partial<SocialState> = {
     name: mine.data?.display_name ?? '',
+    inviteCode: mine.data?.invite_code ?? '',
     friendshipId: fr.data?.id ?? null,
     partnerId: fr.data ? (fr.data.user_a === me ? fr.data.user_b : fr.data.user_a) : null,
   }
@@ -330,6 +328,16 @@ export async function updateName(name: string) {
   const next = name.trim().slice(0, 20)
   await run(() => supabase!.from('profiles').update({ display_name: next }).eq('id', state.userId!))
   set({ name: next })
+}
+
+/** 친구의 초대 코드로 바로 이어진다. 이어지면 친구 기록까지 받아 온다. */
+export async function connectWithCode(code: string, app: AppState) {
+  if (!supabase || !state.userId) return
+  const trimmed = code.trim()
+  if (!trimmed) throw new Error('친구의 코드를 넣어 주세요.')
+  if (state.partnerId) throw new Error(explain(new Error('already connected')))
+  await run(() => supabase!.rpc('connect_with_code', { p_code: trimmed }))
+  await sync(app)
 }
 
 /** 인터넷이 없어도 눌러 두면 연결될 때 보낸다. */
