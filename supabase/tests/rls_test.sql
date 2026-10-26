@@ -57,21 +57,24 @@ insert into public.shared_goals (friendship_id, metric, target, start_day, end_d
 select id, 'articles_read', 10, current_date - 6, current_date, auth.uid() from public.friendships;
 select public.goal_progress(id) = 3 as goal_ok from public.shared_goals;
 
--- 초대 코드 없이 자동 연결: 기존 사용자를 지우고 D, E로 확인한다.
+-- 자동 연결은 꺼져 있고, 초대 코드 연결은 한 사람당 한 쌍만 허용한다. D, E, F로 확인한다.
 reset role;
 delete from public.shared_goals;
 delete from auth.users where id in ('00000000-0000-0000-0000-00000000000a', '00000000-0000-0000-0000-00000000000b', '00000000-0000-0000-0000-00000000000c');
-insert into auth.users (id) values ('00000000-0000-0000-0000-00000000000d');
+insert into auth.users (id) values
+  ('00000000-0000-0000-0000-00000000000d'),
+  ('00000000-0000-0000-0000-00000000000e'),
+  ('00000000-0000-0000-0000-00000000000f');
 set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
-select public.connect_partner() is null as waits_alone;
-reset role;
-insert into auth.users (id) values ('00000000-0000-0000-0000-00000000000e');
-set role authenticated;
+select exists (select 1 from pg_proc where proname = 'connect_partner') and not has_function_privilege('authenticated', 'public.connect_partner()', 'execute') as auto_pair_disabled;
+select invite_code as d_code from public.profiles where id = auth.uid() \gset
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
-select public.connect_partner() is not null as e_pairs_with_d;
-select public.connect_partner() = (select id from public.friendships) as idempotent;
+select public.connect_with_code(:'d_code') is not null as e_pairs_with_d;
+select public.connect_with_code(:'d_code') = (select id from public.friendships) as idempotent;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+select 'do $x$ begin perform public.connect_with_code(' || quote_literal(:'d_code') || '); raise exception ''third connect allowed''; exception when others then if sqlerrm <> ''already paired'' then raise; end if; end $x$' \gexec
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
-select public.connect_partner() = (select id from public.friendships) and count(*) = 1 as d_sees_same_pair from public.friendships;
+select count(*) = 1 as d_sees_one_pair from public.friendships;
 select 'ALL OK' as result;
 -- 위 select 결과 중 f(false)가 하나라도 있으면 실패다. tests/run.sh가 이를 검사한다.

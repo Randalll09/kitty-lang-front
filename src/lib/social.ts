@@ -221,17 +221,9 @@ async function pull() {
   const me = state.userId
   const mine = await supabase.from('profiles').select('display_name, invite_code').eq('id', me).maybeSingle()
   if (mine.error) throw mine.error
-  let fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
+  // 친구 연결은 초대 코드로만 한다(connectWithCode).
+  const fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
   if (fr.error) throw fr.error
-  if (!fr.data) {
-    // 두 사람만 쓰는 앱이라 초대 코드 없이, 아직 짝이 없는 다른 사람과 자동으로 이어진다.
-    const pair = await supabase.rpc('connect_partner')
-    if (pair.error) throw pair.error
-    if (pair.data) {
-      fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
-      if (fr.error) throw fr.error
-    }
-  }
 
   const patch: Partial<SocialState> = {
     name: mine.data?.display_name ?? '',

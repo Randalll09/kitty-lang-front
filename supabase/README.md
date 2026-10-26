@@ -21,7 +21,7 @@
 
 ## API (supabase-js)
 - 기록 올리기: 키 열(user_id, day, language)은 수정 권한이 없어 `upsert`는 막혀요. `update(숫자들).eq(user_id, day, language)`를 먼저 하고 없으면 `insert`해요.
-- 친구 연결(코드 없이): `rpc('connect_partner')`. 짝이 없는 다른 사용자 중 가장 먼저 가입한 사람과 이어지고, 아직 없으면 null이에요. 두 사람이 모두 가입한 뒤에는 Auth 설정에서 신규 가입을 꺼요.
+- 친구 연결: 초대 코드만 쓴다. 자동 연결 `connect_partner`는 20261026040000 마이그레이션에서 실행 권한을 모두 회수했다.
 - 친구 연결(코드): `rpc('connect_with_code', { p_code })` (내 코드는 `profiles.invite_code`)
 - 지표 보기: `rpc('stats_for', { p_user, p_from, p_to })` → 합계, 정답률, 연속 일수. 본인과 친구만 조회돼요.
 - 응원 보내기: `from('cheers').insert({ from_user, to_user, kind })` (같은 상대에게 하루 20번까지)
