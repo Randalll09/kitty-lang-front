@@ -16,11 +16,13 @@
 | `daily_progress` | 하루·언어별 학습 시간(초), 읽은 글 수, 복습 단어 수, 정답 수/문제 수 |
 | `cheers` | 응원 알림(종류 `cheer`/`nudge`/`congrats`만, 자유 텍스트 없음), 읽음 시각 |
 | `shared_goals` | 두 사람 합산 공동 목표(지표, 목표값, 기간) |
+| `saved_words` | 개인 단어장(단어, 읽기, 뜻, 나온 문장, 복습 상태). **본인만** 읽고 쓰며 친구에게도 보이지 않아요 |
 
-글 제목, 단어 내용, 퀴즈 문항은 저장하지 않아요.
+친구와 공유하는 기록은 숫자뿐이에요. 글 제목과 퀴즈 문항은 저장하지 않고, 단어는 본인 단어장(`saved_words`)에만 둬요.
 
 ## API (supabase-js)
 - 기록 올리기: 키 열(user_id, day, language)은 수정 권한이 없어 `upsert`는 막혀요. `update(숫자들).eq(user_id, day, language)`를 먼저 하고 없으면 `insert`해요.
+- 단어장: `from('saved_words').upsert({ user_id, language, word_key, reading, meaning, source, context, box, due }, { onConflict: 'user_id,language,word_key' })`. 뜻 수정은 `update({ meaning })`, 삭제는 `delete()`. 한 사람당 2000개까지예요.
 - 친구 연결(코드 없이): `rpc('connect_partner')`. 짝이 없는 다른 사용자 중 가장 먼저 가입한 사람과 이어지고, 아직 없으면 null이에요. 두 사람이 모두 가입한 뒤에는 Auth 설정에서 신규 가입을 꺼요.
 - 친구 연결(코드): `rpc('connect_with_code', { p_code })` (내 코드는 `profiles.invite_code`)
 - 지표 보기: `rpc('stats_for', { p_user, p_from, p_to })` → 합계, 정답률, 연속 일수. 본인과 친구만 조회돼요.

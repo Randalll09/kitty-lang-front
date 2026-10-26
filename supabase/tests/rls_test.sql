@@ -73,5 +73,40 @@ select public.connect_partner() is not null as e_pairs_with_d;
 select public.connect_partner() = (select id from public.friendships) as idempotent;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select public.connect_partner() = (select id from public.friendships) and count(*) = 1 as d_sees_same_pair from public.friendships;
+-- 단어장: 본인만 읽고 쓴다. 친구(D, E)도 서로의 단어장은 못 본다.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+insert into public.saved_words (user_id, language, word_key, reading, meaning, context)
+  values (auth.uid(), 'ja', '紅葉', 'こうよう', '단풍', '紅葉が見ごろです。');
+insert into public.saved_words (user_id, language, word_key, context)
+  values (auth.uid(), 'en', 'cat', 'The cat sat.');  -- 뜻 없이 저장
+update public.saved_words set meaning = '고양이', box = 1 where word_key = 'cat';
+select meaning = '고양이' and box = 1 as d_fills_meaning from public.saved_words where word_key = 'cat';
+insert into public.saved_words (user_id, language, word_key, meaning)
+  values (auth.uid(), 'ja', '紅葉', '단풍잎')
+  on conflict (user_id, language, word_key) do update set meaning = excluded.meaning;
+select meaning = '단풍잎' as d_upsert_ok from public.saved_words where word_key = '紅葉';
+select count(*) = 2 as d_two_words from public.saved_words;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+select count(*) = 0 as e_cannot_see_friend_words from public.saved_words;
+update public.saved_words set meaning = 'x';  -- 남의 행이라 0행
+do $$ begin
+  begin
+    insert into public.saved_words (user_id, language, word_key)
+      values ('00000000-0000-0000-0000-00000000000d', 'ja', 'x');
+    raise exception 'E should not write D words';
+  exception when others then
+    if sqlerrm = 'E should not write D words' then raise; end if;
+  end;
+  begin
+    insert into public.saved_words (user_id, language, word_key, box)
+      values (auth.uid(), 'ja', 'x', 3);
+    raise exception 'box 3 should be rejected';
+  exception when others then
+    if sqlerrm = 'box 3 should be rejected' then raise; end if;
+  end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select count(*) = 2 and bool_and(meaning <> 'x') as d_words_untouched from public.saved_words;
+
 select 'ALL OK' as result;
 -- 위 select 결과 중 f(false)가 하나라도 있으면 실패다. tests/run.sh가 이를 검사한다.
