@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
-import { completeTask, dueWords, gradeWord, removeWord, update } from '../lib/store'
+import { completeTask, dueWords, gradeWord, removeWord, setMeaning, update } from '../lib/store'
 import type { AppState } from '../types'
 
 const ST = ['새 단어', '익히는 중', '외웠어요']
@@ -51,7 +51,16 @@ function List({ state }: { state: AppState }) {
           <div key={w.key} className="wrow">
             <div className="a">
               <div className="jp">{w.key}{w.reading && <small>{w.reading}</small>}</div>
-              <div className="kr">{w.meaning} · {w.source}</div>
+              <div className="kr">{w.meaning ? `${w.meaning} · ${w.source}` : w.source}</div>
+              {w.context && <div className="ctx">{w.context}</div>}
+              {!w.meaning && (
+                <input
+                  className="mean-in"
+                  placeholder="뜻을 적어 두세요"
+                  aria-label={`${w.key} 뜻 입력`}
+                  onBlur={(e) => e.target.value.trim() && update((s) => setMeaning(s, w.key, e.target.value))}
+                />
+              )}
             </div>
             <span className={`st st${w.box}`}>{ST[w.box]}</span>
             <button className="del" type="button" aria-label={`${w.key} 삭제`} onClick={() => update((s) => removeWord(s, w.key))}>×</button>
@@ -146,7 +155,8 @@ function Review({ state }: { state: AppState }) {
         {flipped ? (
           <>
             {w.reading && <span className="rd">{w.reading}</span>}
-            <span className="mean">{w.meaning}</span>
+            <span className="mean">{w.meaning || '(뜻을 아직 안 적었어요)'}</span>
+            {w.context && <span className="soft small">{w.context}</span>}
           </>
         ) : (
           <span className="tapnote">눌러서 뜻 보기</span>

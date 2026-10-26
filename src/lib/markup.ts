@@ -58,3 +58,17 @@ export function wordsOf(paragraphs: string[]): GlossWord[] {
 export const ALL_WORDS: GlossWord[] = wordsOf(ARTICLES.flatMap((a) => a.paragraphs))
 
 export const charCount = (paragraphs: string[]) => paragraphs.map(plain).join('').length
+
+/** pieces[index]의 토큰이 들어 있는 한 문장(。！？ 기준) */
+export function sentenceAt(pieces: Piece[], index: number) {
+  const chunks = pieces.map((p) => ('text' in p ? p.text : p.token.surface + p.token.tail))
+  const at = chunks.slice(0, index).join('').length
+  const full = chunks.join('')
+  const end = /[。！？!?]/g
+  let start = 0
+  for (let m = end.exec(full); m; m = end.exec(full)) {
+    if (m.index < at) start = m.index + 1
+    else return full.slice(start, m.index + 1).trim()
+  }
+  return full.slice(start).trim()
+}

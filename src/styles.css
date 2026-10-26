@@ -171,7 +171,7 @@ button:focus-visible { outline: 3px solid var(--lav-deep); outline-offset: 2px; 
 .hint { font-size: 12px; color: var(--ink-soft); background: var(--paper); margin: 0; }
 .rpages { display: flex; flex-direction: column; gap: 14px; font-family: var(--f-jp); line-height: 2.3; letter-spacing: 0.01em; line-break: strict; margin-top: 12px; }
 .rpages p { margin: 0; }
-.w { border: 0; background: none; font: inherit; color: inherit; padding: 0 1px; margin: 0; border-radius: 6px; cursor: pointer; letter-spacing: inherit; line-height: inherit; text-align: inherit; }
+.w { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; border: 0; background: none; font: inherit; color: inherit; padding: 0 1px; margin: 0; border-radius: 6px; cursor: pointer; letter-spacing: inherit; line-height: inherit; text-align: inherit; }
 .w:focus-visible { outline: 2px solid var(--lav-deep); outline-offset: 1px; }
 .w.on { background: var(--butter); box-shadow: 0 2px 0 var(--peach-deep); }
 .w.saved { box-shadow: 0 2px 0 var(--mint-deep); }
@@ -298,3 +298,6 @@ rt { font-size: 0.5em; color: var(--ink-soft); letter-spacing: -0.04em; font-wei
 .dot { position: absolute; top: 2px; right: calc(50% - 20px); width: 10px; height: 10px; border-radius: 50%; background: var(--rose-deep); border: 2px solid var(--line); }
 .nav button { position: relative; }
 .gearbtn { margin-left: 4px; }
+
+.wrow .ctx { font-size: 12px; color: var(--ink-soft); margin-top: 2px; }
+.wrow .mean-in { font: inherit; font-size: 14px; width: 100%; margin-top: 4px; border: 2px solid var(--line); border-radius: 10px; padding: 3px 8px; background: var(--card); color: inherit; }
