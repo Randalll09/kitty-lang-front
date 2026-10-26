@@ -76,6 +76,41 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
 select 'do $x$ begin perform public.connect_with_code(' || quote_literal(:'d_code') || '); raise exception ''third connect allowed''; exception when others then if sqlerrm <> ''already paired'' then raise; end if; end $x$' \gexec
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select count(*) = 1 as d_sees_one_pair from public.friendships;
+-- 단어장: 본인만 읽고 쓴다. 친구(D, E)도 서로의 단어장은 못 본다.
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+insert into public.saved_words (user_id, language, word_key, reading, meaning, context)
+  values (auth.uid(), 'ja', '紅葉', 'こうよう', '단풍', '紅葉が見ごろです。');
+insert into public.saved_words (user_id, language, word_key, context)
+  values (auth.uid(), 'en', 'cat', 'The cat sat.');  -- 뜻 없이 저장
+update public.saved_words set meaning = '고양이', box = 1 where word_key = 'cat';
+select meaning = '고양이' and box = 1 as d_fills_meaning from public.saved_words where word_key = 'cat';
+insert into public.saved_words (user_id, language, word_key, meaning)
+  values (auth.uid(), 'ja', '紅葉', '단풍잎')
+  on conflict (user_id, language, word_key) do update set meaning = excluded.meaning;
+select meaning = '단풍잎' as d_upsert_ok from public.saved_words where word_key = '紅葉';
+select count(*) = 2 as d_two_words from public.saved_words;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+select count(*) = 0 as e_cannot_see_friend_words from public.saved_words;
+update public.saved_words set meaning = 'x';  -- 남의 행이라 0행
+do $$ begin
+  begin
+    insert into public.saved_words (user_id, language, word_key)
+      values ('00000000-0000-0000-0000-00000000000d', 'ja', 'x');
+    raise exception 'E should not write D words';
+  exception when others then
+    if sqlerrm = 'E should not write D words' then raise; end if;
+  end;
+  begin
+    insert into public.saved_words (user_id, language, word_key, box)
+      values (auth.uid(), 'ja', 'x', 3);
+    raise exception 'box 3 should be rejected';
+  exception when others then
+    if sqlerrm = 'box 3 should be rejected' then raise; end if;
+  end;
+end $$;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select count(*) = 2 and bool_and(meaning <> 'x') as d_words_untouched from public.saved_words;
+
 -- 밑줄 질문 호출 제한: 한도 2회까지 세고 그 뒤는 -1, 앱 사용자는 표와 함수에 접근 못 한다
 reset role;
 select public.take_ask_quota('00000000-0000-0000-0000-00000000000d', 2, 0) = 1 as ask_first;
