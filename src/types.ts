@@ -39,6 +39,11 @@ export interface VocabEntry {
 
 export interface DayLog {
   tasks: Partial<Record<TaskId, true>>
+  /** 그날 읽은 글, 복습한 단어, 퀴즈 맞힌 수/푼 수. 서버에 올리는 숫자들이다. */
+  articles?: number
+  reviewed?: number
+  quizCorrect?: number
+  quizTotal?: number
 }
 
 export interface Settings {

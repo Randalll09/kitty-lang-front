@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { addDays, today } from './dates'
-import type { AppState, TaskId, VocabEntry } from '../types'
+import type { AppState, DayLog, TaskId, VocabEntry } from '../types'
 
 const KEY = 'kitty-lang-v1'
 
@@ -75,12 +75,15 @@ export function minutesOn(s: AppState, day: string) {
 
 export const minutesToday = (s: AppState) => minutesOn(s, today())
 
-/** 하루에 하나라도 했으면 이어진 날로 센다. 오늘 아직 안 했으면 어제까지 센다. */
+/** 그날 독해(글 읽기)를 끝냈는지. 하루 완료와 달력 발바닥은 이 기준이다. */
+export const readOn = (s: AppState, day: string) => !!s.days[day]?.tasks.read
+
+/** 독해를 끝낸 날이 이어진 일수. 오늘 아직 안 읽었으면 어제까지 센다. */
 export function streak(s: AppState) {
   let day = today()
-  if (minutesOn(s, day) === 0) day = addDays(day, -1)
+  if (!readOn(s, day)) day = addDays(day, -1)
   let n = 0
-  while (minutesOn(s, day) > 0) {
+  while (readOn(s, day)) {
     n++
     day = addDays(day, -1)
   }
@@ -91,7 +94,16 @@ export function completeTask(s: AppState, id: TaskId): AppState {
   const d = today()
   const log = s.days[d] ?? { tasks: {} }
   if (log.tasks[id]) return s
-  return { ...s, days: { ...s.days, [d]: { tasks: { ...log.tasks, [id]: true } } } }
+  return { ...s, days: { ...s.days, [d]: { ...log, tasks: { ...log.tasks, [id]: true } } } }
+}
+
+/** 오늘 기록의 숫자를 더한다. 서버에는 이 숫자들만 올라간다. */
+export function addToday(s: AppState, add: Partial<Record<'articles' | 'reviewed' | 'quizCorrect' | 'quizTotal', number>>): AppState {
+  const d = today()
+  const log = s.days[d] ?? { tasks: {} }
+  const next: DayLog = { ...log }
+  for (const k of Object.keys(add) as (keyof typeof add)[]) next[k] = (log[k] ?? 0) + (add[k] ?? 0)
+  return { ...s, days: { ...s.days, [d]: next } }
 }
 
 /* ---------- 단어 ---------- */
@@ -116,7 +128,7 @@ export function gradeWord(s: AppState, key: string, knew: boolean): AppState {
   const box = (knew ? Math.min(2, w.box + 1) : w.box) as VocabEntry['box']
   const due = knew ? addDays(today(), INTERVALS[box]) : today()
   const next: AppState = { ...s, words: { ...s.words, [key]: { ...w, box, due } } }
-  return knew ? { ...next, snacks: next.snacks + 1, reviewedTotal: next.reviewedTotal + 1 } : next
+  return knew ? addToday({ ...next, snacks: next.snacks + 1, reviewedTotal: next.reviewedTotal + 1 }, { reviewed: 1 }) : next
 }
 
 export const dueWords = (s: AppState) =>

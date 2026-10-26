@@ -7,8 +7,9 @@ import type { AppState, TaskId } from '../types'
 
 export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }) {
   const minutes = minutesToday(state)
-  const done = minutes >= DAILY_GOAL
   const tasks = tasksToday(state)
+  // 하루 완료는 30분이 아니라 독해(글 읽기)를 끝냈는지로 정한다.
+  const done = !!tasks.read
   const due = dueWords(state).length
   const saved = Object.keys(state.words).length
   const next = ARTICLES.find((a) => (state.progress[a.id] ?? 0) < 100) ?? ARTICLES[0]
@@ -21,7 +22,7 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
     { id: 'words', title: '새 단어 확인', sub: `저장한 단어 ${saved}개`, to: { name: 'vocab', tab: 'list' } },
   ]
 
-  const bubble = done ? '오늘 목표 달성! 쿨쿨…' : minutes >= 20 ? '거의 다 했어요!' : '오늘도 30분만 같이 해요'
+  const bubble = done ? '오늘 독해 끝! 쿨쿨…' : minutes >= 20 ? '거의 다 했어요!' : '오늘은 글 한 편만 같이 읽어요'
 
   return (
     <div className="body">
@@ -30,6 +31,7 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
         <div className="r">
           <span className="chip fire">연속 {streak(state)}일</span>
           <span className="chip coin">간식 {state.snacks}</span>
+          <button className="iconbtn gearbtn" type="button" aria-label="설정" onClick={() => go({ name: 'settings' })}><Icon name="gear" /></button>
         </div>
       </div>
 
@@ -44,7 +46,7 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
 
       <div className="card goal">
         <div className="row">
-          <h2>오늘의 30분</h2>
+          <h2>오늘의 학습 시간</h2>
           <span className="big">{minutes} / {DAILY_GOAL}분</span>
         </div>
         <div className="bar" role="progressbar" aria-valuemin={0} aria-valuemax={DAILY_GOAL} aria-valuenow={minutes}>
@@ -65,7 +67,7 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
       <div className="card">
         <div className="top" style={{ marginBottom: 10 }}>
           <h2>내 기록</h2>
-          <span className="soft small">친구와 숫자 공유는 다음 단계에서 열려요</span>
+          <button className="btn ghost sm" type="button" onClick={() => go({ name: 'cal' })}>달력 보기</button>
         </div>
         <div className="mystats">
           <div><b>{minutes}분</b><span>오늘 학습 시간</span></div>
