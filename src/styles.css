@@ -20,20 +20,23 @@
   --f-display: 'Jua', 'Gowun Dodum', sans-serif;
   --f-body: 'Gowun Dodum', 'Noto Sans KR', sans-serif;
   --f-jp: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', 'Noto Sans CJK JP', 'Gowun Dodum', sans-serif;
+  --cat-f: none;
   color-scheme: light;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme='light']) {
-    --bg: #262029; --paper: #32282f; --card: #3b3039; --ink: #f6e9ee; --ink-soft: #cdb6c1; --line: #e9d3da;
-    --peach: #6f4c43; --peach-deep: #f0a47c; --mint: #35594c; --mint-deep: #7cc7a6; --lav: #4d4274; --lav-deep: #b6a6ee;
-    --sky: #37526b; --sky-2: #2e4458; --butter: #6f622a; --rose: #6a3d4a; --rose-deep: #ee9db0; --shadow: rgba(0, 0, 0, 0.3);
+    --bg: #1b1830; --paper: #262244; --card: #302b57; --ink: #f6efff; --ink-soft: #bdb2dc; --line: #d9cdf7;
+    --peach: #b8508a; --peach-deep: #ffb08a; --mint: #2d5c64; --mint-deep: #79d8b4; --lav: #4a4290; --lav-deep: #a99cff;
+    --sky: #2c4b86; --sky-2: #233d70; --butter: #4f5ec2; --rose: #9b4a9c; --rose-deep: #ff9fc0; --shadow: rgba(8, 6, 24, 0.45);
+    --cat-f: drop-shadow(1.5px 0 0 #fff6ef) drop-shadow(-1.5px 0 0 #fff6ef) drop-shadow(0 1.5px 0 #fff6ef) drop-shadow(0 -1.5px 0 #fff6ef);
     color-scheme: dark;
   }
 }
 :root[data-theme='dark'] {
-  --bg: #262029; --paper: #32282f; --card: #3b3039; --ink: #f6e9ee; --ink-soft: #cdb6c1; --line: #e9d3da;
-  --peach: #6f4c43; --peach-deep: #f0a47c; --mint: #35594c; --mint-deep: #7cc7a6; --lav: #4d4274; --lav-deep: #b6a6ee;
-  --sky: #37526b; --sky-2: #2e4458; --butter: #6f622a; --rose: #6a3d4a; --rose-deep: #ee9db0; --shadow: rgba(0, 0, 0, 0.3);
+  --bg: #1b1830; --paper: #262244; --card: #302b57; --ink: #f6efff; --ink-soft: #bdb2dc; --line: #d9cdf7;
+  --peach: #b8508a; --peach-deep: #ffb08a; --mint: #2d5c64; --mint-deep: #79d8b4; --lav: #4a4290; --lav-deep: #a99cff;
+  --sky: #2c4b86; --sky-2: #233d70; --butter: #4f5ec2; --rose: #9b4a9c; --rose-deep: #ff9fc0; --shadow: rgba(8, 6, 24, 0.45);
+  --cat-f: drop-shadow(1.5px 0 0 #fff6ef) drop-shadow(-1.5px 0 0 #fff6ef) drop-shadow(0 1.5px 0 #fff6ef) drop-shadow(0 -1.5px 0 #fff6ef);
   color-scheme: dark;
 }
 
@@ -90,7 +93,7 @@ button:focus-visible { outline: 3px solid var(--lav-deep); outline-offset: 2px; 
 .nav button { flex: 1; border: 0; background: none; font-size: 11px; color: var(--ink-soft); display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 5px 2px; border-radius: 12px; cursor: pointer; }
 .nav .on { background: var(--peach); color: var(--ink); font-weight: 700; }
 
-.cat { display: block; flex: none; width: auto; user-select: none; -webkit-user-drag: none; }
+.cat { display: block; flex: none; width: auto; filter: var(--cat-f); user-select: none; -webkit-user-drag: none; }
 
 /* home */
 .room { position: relative; padding: 0; overflow: hidden; height: 210px; background: var(--sky); }
