@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from 'react'
 import { addDays, today } from './dates'
-import { minutesOn } from './store'
+import { minutesOn, rec } from './store'
 import { configured, supabase } from './supabase'
-import type { AppState } from '../types'
+import type { AppState, Lang } from '../types'
 
 /* 서버에는 숫자만 올린다. 글, 단어, 퀴즈 내용은 올라가지 않는다. */
 
 const KEY = 'kitty-social-v1'
-const LANGUAGE = 'ja'
+const LANGUAGES: Lang[] = ['ja', 'en']
 const WINDOW_DAYS = 62
 
 export type CheerKind = 'cheer' | 'nudge' | 'congrats'
@@ -162,10 +162,10 @@ function adopt(userId: string, email: string | null) {
 
 /* ---------- 동기화 ---------- */
 
-const dayPayload = (s: AppState, day: string) => {
-  const log = s.days[day]
+const dayPayload = (s: AppState, day: string, lang: Lang) => {
+  const log = rec(s, lang).days[day]
   return {
-    study_seconds: minutesOn(s, day) * 60,
+    study_seconds: minutesOn(s, day, lang) * 60,
     articles_read: log?.articles ?? 0,
     words_reviewed: log?.reviewed ?? 0,
     quiz_correct: Math.min(log?.quizCorrect ?? 0, log?.quizTotal ?? 0),
@@ -177,26 +177,29 @@ async function pushDays(app: AppState) {
   if (!supabase || !state.userId) return
   const from = addDays(today(), -WINDOW_DAYS)
   const pushed = { ...state.pushed }
-  for (const day of Object.keys(app.days)) {
+  const entries = LANGUAGES.flatMap((language) => Object.keys(rec(app, language).days).map((day) => ({ language, day })))
+  for (const { language, day } of entries) {
     if (day < from) continue
-    const nums = dayPayload(app, day)
+    const nums = dayPayload(app, day, language)
     if (Object.values(nums).every((n) => n === 0)) continue
     const sig = JSON.stringify(nums)
-    if (pushed[day] === sig) continue
+    // 일본어는 예전과 같은 키(날짜)를 쓰고, 영어는 앞에 언어를 붙인다.
+    const pk = language === 'ja' ? day : `${language}:${day}`
+    if (pushed[pk] === sig) continue
     // 키 열(user_id, day, language)은 수정 권한이 없어서 upsert 대신 수정 → 없으면 추가 순서로 올린다.
     const upd = await supabase
       .from('daily_progress')
       .update(nums)
       .eq('user_id', state.userId)
       .eq('day', day)
-      .eq('language', LANGUAGE)
+      .eq('language', language)
       .select('day')
     if (upd.error) throw upd.error
     if (!upd.data.length) {
-      const ins = await supabase.from('daily_progress').insert({ user_id: state.userId, day, language: LANGUAGE, ...nums })
+      const ins = await supabase.from('daily_progress').insert({ user_id: state.userId, day, language, ...nums })
       if (ins.error) throw ins.error
     }
-    pushed[day] = sig
+    pushed[pk] = sig
   }
   set({ pushed })
 }

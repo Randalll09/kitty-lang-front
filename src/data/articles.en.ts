@@ -161,7 +161,7 @@ export const ARTICLES_EN: ArticleEn[] = [
       "Sometimes members of the genus Pelargonium are also called geraniums. Pelargonium species are also grown as garden plants. Sometimes members of the Geranium genus are called \"hardy geraniums\", to tell them apart from Pelargonium.",
     ],
     quiz: [
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "How many petals do geranium flowers have?", opts: ["Five", "Three", "Four", "Six"], exp: "Geranium flowers have five petals." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "How many petals do geranium flowers have?", opts: ["Five", "Three", "Four", "Six"], exp: "제라늄 꽃은 꽃잎이 다섯 장이에요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What kind of soil can geraniums grow in?", opts: ["Any soil that is not too wet", "Only very wet soil", "Only sand", "Only rich soil"], exp: "너무 젖지 않은 흙이면 어디서나 자란다고 했어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Why are some Geranium plants called \"hardy geraniums\"?", opts: ["To tell them apart from Pelargonium", "Because they are very large", "Because they are red", "Because they live in water"], exp: "Pelargonium과 구분하려고 hardy geraniums라고 부른다고 했어요." },
     ],
@@ -248,7 +248,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Where does the Persian cat come from?", opts: ["Persia (now Iran)", "Thailand", "Maine", "Russia"], exp: "Persia, 지금의 Iran 출신이에요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What gave the Persian a really flat face?", opts: ["Very careful breeding", "Too much sun", "A special food", "Cold weather"], exp: "아주 조심스러운 breeding(품종 개량)으로 납작한 얼굴이 되었어요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What disease can Persians get easily?", opts: ["Polycystic kidney disease", "Hair loss", "Bad eyes", "A loud voice"], exp: "They can get polycystic kidney disease easily." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What disease can Persians get easily?", opts: ["Polycystic kidney disease", "Hair loss", "Bad eyes", "A loud voice"], exp: "페르시안은 다낭성 신장병에 쉽게 걸릴 수 있어요." },
     ],
     source: src("Persian cat", "https://simple.wikipedia.org/wiki/Persian_cat", 10966797),
   },
@@ -267,8 +267,8 @@ export const ARTICLES_EN: ArticleEn[] = [
       "Some Lilium species are toxic to cats, especially Lilium longiflorum.The mechanism is not exactly known but it involves damage to the kidneys, which can cause acute renal failure. Veterinary help should be sought, as a matter of urgency, for any cat that is suspected of eating any part of a lily – including licking pollen that may have brushed onto its coat.",
     ],
     quiz: [
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What do most lilies grow from?", opts: ["A bulb", "A leaf", "A branch", "A stone"], exp: "Most lilies grow from a bulb." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Lily petals come in multiples of what number?", opts: ["Three", "Two", "Five", "Ten"], exp: "A lily's petals come in multiples of three." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What do most lilies grow from?", opts: ["A bulb", "A leaf", "A branch", "A stone"], exp: "백합은 대부분 알뿌리(bulb)에서 자라요." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Lily petals come in multiples of what number?", opts: ["Three", "Two", "Five", "Ten"], exp: "백합의 꽃잎 수는 3의 배수예요." },
       { kind: "추론", ask: "글의 내용과 맞는 것을 고르세요", stem: "Why should cat owners be careful with lilies?", opts: ["Some lilies are toxic to cats", "Lilies are very sharp", "Lilies make cats sleepy", "Lilies smell bad"], exp: "일부 백합은 고양이에게 toxic(독성)이 있어 신장을 해칠 수 있어요." },
     ],
     source: src("Lily", "https://simple.wikipedia.org/wiki/Lily", 10932406),
@@ -333,7 +333,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     ],
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What happens when Kirby swallows an enemy?", opts: ["He gets that enemy's power", "He gets smaller", "He falls asleep", "He loses a life"], exp: "almost always acquire their power, 이걸 Copy Ability라고 해요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who created Kirby?", opts: ["Masahiro Sakurai", "Shigeru Miyamoto", "Satoshi Tajiri", "Gunpei Yokoi"], exp: "Kirby was created by Masahiro Sakurai." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who created Kirby?", opts: ["Masahiro Sakurai", "Shigeru Miyamoto", "Satoshi Tajiri", "Gunpei Yokoi"], exp: "커비는 사쿠라이 마사히로가 만들었어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What was the first Kirby game?", opts: ["Kirby's Dream Land", "Kirby's Adventure", "Kirby 64", "Kirby's Return to Dream Land"], exp: "첫 번째는 1992년 Game Boy용 Kirby's Dream Land예요." },
     ],
     source: src("Kirby (series)", "https://simple.wikipedia.org/wiki/Kirby_(series)", 10736474),
@@ -379,7 +379,7 @@ export const ARTICLES_EN: ArticleEn[] = [
       "bowser has yellow skin and green accents on his head. Bowser's head has two white horns on top of his head. Bowser has a green-spiked shell on his back. Bowser's body is fat and muscular. Bowser has a shock of red color hair on middle of his head. Bowser wears shiny spiked rings one around his neck, and has two on each shoulder. He has the ability to breathe fire and has immense power.",
     ],
     quiz: [
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What does Bowser do to Princess Peach?", opts: ["He kidnaps her", "He saves her", "He teaches her", "He marries Mario"], exp: "He ... kidnaps Princess Peach." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What does Bowser do to Princess Peach?", opts: ["He kidnaps her", "He saves her", "He teaches her", "He marries Mario"], exp: "쿠파는 피치 공주를 납치해요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What can Bowser do?", opts: ["Breathe fire", "Turn invisible", "Freeze water", "Fly without a machine"], exp: "Bowser는 breathes fire(불을 뿜어요)." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "In Super Mario Bros., who were the first seven Bowsers?", opts: ["His minions disguised as him", "His real children", "Mario's friends", "Robots from space"], exp: "처음 일곱 성의 Bowser는 Bowser로 변장한 minions였어요." },
     ],
@@ -401,7 +401,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     ],
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who is the main character of the Metroid series?", opts: ["Samus Aran", "Mario", "Link", "Kirby"], exp: "주인공은 Samus Aran이에요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What do Metroids look like?", opts: ["Jellyfish that can fly", "Big lizards", "Small cats", "Round robots"], exp: "Metroids look a lot like jellyfish except they can fly." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What do Metroids look like?", opts: ["Jellyfish that can fly", "Big lizards", "Small cats", "Round robots"], exp: "메트로이드는 날 수 있다는 점만 빼면 해파리를 많이 닮았어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who is Samus's worst enemy?", opts: ["Ridley", "Bowser", "Ganon", "King Dedede"], exp: "Space Pirate의 지휘관인 dragon Ridley가 가장 큰 적이에요." },
     ],
     source: src("Metroid", "https://simple.wikipedia.org/wiki/Metroid", 10659913),
@@ -600,7 +600,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     ],
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What was the NES called in Japan?", opts: ["The Famicom", "The Switch", "The Game Boy", "The Wii"], exp: "일본에서는 Famicom이라고 불렸어요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "In what year did the NES come out in the United States?", opts: ["1985", "1983", "1995", "2003"], exp: "It came out in 1985 in the United States." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "In what year did the NES come out in the United States?", opts: ["1985", "1983", "1995", "2003"], exp: "미국에서는 1985년에 나왔어요." },
       { kind: "추론", ask: "글의 내용과 맞는 것을 고르세요", stem: "What changed Nintendo's plan to use Atari to distribute the system in North America?", opts: ["The video game crash of 1983", "A new controller", "A fire in the factory", "A change of president"], exp: "1983년 비디오 게임 시장 붕괴(crash) 때문에 계획이 바뀌었어요." },
     ],
     source: src("Nintendo Entertainment System", "https://simple.wikipedia.org/wiki/Nintendo_Entertainment_System", 10908628),
@@ -628,7 +628,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     ],
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What is a calico cat?", opts: ["A cat with three colors", "A breed from Japan", "A cat with no fur", "A big wild cat"], exp: "calico는 세 가지 색을 가진 고양이를 뜻하고 품종이 아니에요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Nearly all calico cats are which sex?", opts: ["Female", "Male", "Both equally", "Neither"], exp: "Nearly all calico cats are female." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Nearly all calico cats are which sex?", opts: ["Female", "Male", "Both equally", "Neither"], exp: "삼색 고양이는 거의 모두 암컷이에요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "In Japan, calico cats are said to bring what?", opts: ["Good luck", "Bad weather", "Many mice", "A long life"], exp: "일본에서는 good luck을 가져온다고 하고, 마네키네코가 그 예예요." },
     ],
     source: src("Calico cat", "https://simple.wikipedia.org/wiki/Calico_cat", 11035482),
@@ -656,7 +656,7 @@ export const ARTICLES_EN: ArticleEn[] = [
       "In the 1990’s there was a sequel game called Super Mario's Wacky Worlds which was based on historical locations, including Ancient Greece and Egypt, but it got cancelled.",
     ],
     quiz: [
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which character appears for the first time in this game?", opts: ["Yoshi", "Luigi", "Bowser", "Princess Toadstool"], exp: "Yoshi appears in this game for the first time." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which character appears for the first time in this game?", opts: ["Yoshi", "Luigi", "Bowser", "Princess Toadstool"], exp: "요시가 이 게임에서 처음 나와요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What does the cape feather do?", opts: ["It gives Mario a cape and lets him fly", "It makes Mario swim", "It makes Mario invisible", "It gives Mario a gun"], exp: "cape feather를 먹으면 망토가 생겨 하늘을 날 수 있어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who made all of the music for the game?", opts: ["Kōji Kondō", "Shigeru Miyamoto", "Takashi Tezuka", "Masahiro Sakurai"], exp: "Kōji Kondō가 음악을 모두 만들었어요." },
     ],
@@ -689,7 +689,7 @@ export const ARTICLES_EN: ArticleEn[] = [
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What mark do tabby cats often have on their foreheads?", opts: ["A mark like the letter \"M\"", "A star", "A black circle", "A white line"], exp: "이마에 \"M\" 모양 무늬가 있다고 했어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "How many genetically different tabby patterns are there?", opts: ["Four", "Two", "Six", "Ten"], exp: "mackerel, classic, spotted, ticked 네 가지예요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which tabby pattern is the original and by far the most common?", opts: ["Mackerel", "Classic", "Ticked", "Spotted"], exp: "Mackerel is the original pattern and is by far the most common." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which tabby pattern is the original and by far the most common?", opts: ["Mackerel", "Classic", "Ticked", "Spotted"], exp: "고등어 무늬(Mackerel)가 원래 무늬이고 가장 흔해요." },
     ],
     source: src("Tabby cat", "https://simple.wikipedia.org/wiki/Tabby_cat", 10360038),
   },
@@ -718,8 +718,8 @@ export const ARTICLES_EN: ArticleEn[] = [
     ],
     quiz: [
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What does \"hybrid console\" mean for the Switch?", opts: ["It can connect to a TV or be used as a handheld", "It only plays old games", "It has no controllers", "It only works online"], exp: "TV에 연결하거나 handheld로 쓸 수 있다는 뜻이에요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What are the Switch controllers called?", opts: ["Joy-Cons", "Gamepads", "Wii Remotes", "Pro Sticks"], exp: "controllers are called Joy-Cons." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "How much did the original Switch model cost?", opts: ["$299", "$149", "$349.99", "$99"], exp: "The original Switch model costs $299." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What are the Switch controllers called?", opts: ["Joy-Cons", "Gamepads", "Wii Remotes", "Pro Sticks"], exp: "스위치의 컨트롤러는 조이콘(Joy-Con)이라고 불러요." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "How much did the original Switch model cost?", opts: ["$299", "$149", "$349.99", "$99"], exp: "처음 나온 스위치 모델의 가격은 299달러예요." },
     ],
     source: src("Nintendo Switch", "https://simple.wikipedia.org/wiki/Nintendo_Switch", 11016554),
   },
@@ -745,9 +745,9 @@ export const ARTICLES_EN: ArticleEn[] = [
       "The game would later have updated versions such as Super Mario All-Stars and Super Mario Bros. Deluxe. The second one adds more modes like the Japanese-exclusive sequel Super Mario Bros.: The Lost Levels. The game's design was also usable in the Super Mario Maker series, and challenges based off of the game are in Nintendo World Championships: NES Edition.",
     ],
     quiz: [
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who composed the music for Super Mario Bros.?", opts: ["Kōji Kondō", "Takashi Tezuka", "Shigeru Miyamoto", "Masahiro Sakurai"], exp: "The music was made by Kōji Kondō." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Who composed the music for Super Mario Bros.?", opts: ["Kōji Kondō", "Takashi Tezuka", "Shigeru Miyamoto", "Masahiro Sakurai"], exp: "음악은 곤도 고지(Kōji Kondō)가 만들었어요." },
       { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "What happens when Super Mario touches an enemy?", opts: ["He gets smaller", "He dies at once", "He gets bigger", "He can fly"], exp: "Super Mario가 적에게 닿으면 Small Mario로 작아져요." },
-      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which game was bundled with Super Mario Bros. with every NES sold?", opts: ["Duck Hunt", "Metroid", "Kirby's Dream Land", "Splatoon"], exp: "This and Duck Hunt were bundled with every NES sold." },
+      { kind: "세부", ask: "글의 내용과 맞는 것을 고르세요", stem: "Which game was bundled with Super Mario Bros. with every NES sold?", opts: ["Duck Hunt", "Metroid", "Kirby's Dream Land", "Splatoon"], exp: "팔린 NES마다 이 게임과 덕 헌트(Duck Hunt)가 함께 들어 있었어요." },
     ],
     source: src("Super Mario Bros.", "https://simple.wikipedia.org/wiki/Super_Mario_Bros.", 10731876),
   },

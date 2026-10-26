@@ -3,7 +3,7 @@ import { Icon } from '../components/Icon'
 import { Paw } from '../components/Paw'
 import { dayString, today } from '../lib/dates'
 import { partnerRead, useSocial, connected } from '../lib/social'
-import { minutesOn, readOn } from '../lib/store'
+import { dayTotals } from '../lib/store'
 import type { AppState } from '../types'
 
 const WEEK = '일월화수목금토'.split('')
@@ -24,7 +24,7 @@ export function Calendar({ state }: { state: AppState }) {
   const t = today()
   const hasFriend = connected(social)
 
-  const me = (d: number) => readOn(state, key(d))
+  const me = (d: number) => dayTotals(state, key(d)).read
   const fr = (d: number) => hasFriend && partnerRead(social, key(d))
 
   let mine = 0
@@ -48,16 +48,16 @@ export function Calendar({ state }: { state: AppState }) {
     setSel(next === 0 ? t : dayString(new Date(f.getFullYear(), f.getMonth() + 1, 0)))
   }
 
-  const sm = state.days[sel]
+  const sm = dayTotals(state, sel)
   const sp = social.partnerDays[sel]
-  const selMine = readOn(state, sel)
+  const selMine = sm.read
   const acc = (c: number, n: number) => (n ? `${Math.round((c / n) * 100)}%` : '-')
 
   return (
     <div className="body">
       <div className="top">
         <h2 style={{ fontSize: 22 }}>학습 기록</h2>
-        <span className="chip lang">일본어</span>
+        <span className="chip lang">일본어·영어</span>
       </div>
 
       <div className="cmonth">
@@ -102,14 +102,14 @@ export function Calendar({ state }: { state: AppState }) {
 
       <div className="card cdet">
         <h2>{Number(sel.slice(5, 7))}월 {Number(sel.slice(8))}일{sel === t ? ' (오늘)' : ''}</h2>
-        {selMine || (sm && minutesOn(state, sel) > 0) ? (
+        {selMine || sm.minutes > 0 ? (
           <div className="row">
             <span className="av me">나</span>
             <span className="v">
-              <span><b>{minutesOn(state, sel)}</b>분</span>
-              <span>글 <b>{sm?.articles ?? 0}</b>편</span>
-              <span>복습 <b>{sm?.reviewed ?? 0}</b>개</span>
-              <span>정답률 <b>{acc(sm?.quizCorrect ?? 0, sm?.quizTotal ?? 0)}</b></span>
+              <span><b>{sm.minutes}</b>분</span>
+              <span>글 <b>{sm.articles}</b>편</span>
+              <span>복습 <b>{sm.reviewed}</b>개</span>
+              <span>정답률 <b>{acc(sm.quizCorrect, sm.quizTotal)}</b></span>
             </span>
           </div>
         ) : (

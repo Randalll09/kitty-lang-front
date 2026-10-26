@@ -3,7 +3,7 @@ import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
 import { charCount, parse, sentenceAt, tokenKey, tokenReading, type Piece, type Token } from '../lib/markup'
-import { FONT_SIZES, addToday, completeTask, saveWord, removeWord, update } from '../lib/store'
+import { FONT_SIZES, finishArticle, saveWord, removeWord, setLastArticle, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 
@@ -30,7 +30,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const bookmarked = state.bookmarks.includes(article.id)
 
   useEffect(() => {
-    update((s) => ({ ...s, lastArticle: article.id }))
+    update((s) => setLastArticle(s, article.id))
   }, [article.id])
 
   // 떠날 때 가장 멀리 읽은 위치를 저장한다. 다 읽었어요를 누르면 이미 100이다.
@@ -110,7 +110,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const finish = () => {
     if (finished) return go({ name: 'quiz', id: article.id })
     maxPct.current = 100
-    update((s) => completeTask(addToday({ ...s, progress: { ...s.progress, [article.id]: 100 }, articlesRead: s.articlesRead + 1 }, { articles: 1 }), 'read'))
+    update((s) => finishArticle(s, article.id))
   }
 
   const fs = FONT_SIZES[settings.fontIndex]

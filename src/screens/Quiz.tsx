@@ -2,18 +2,25 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
-import { buildQuiz } from '../lib/quiz'
+import { ARTICLES_EN } from '../data/articles.en'
+import { buildQuiz, buildQuizEn } from '../lib/quiz'
 import { wordsOf } from '../lib/markup'
-import { addToday, completeTask, saveWord, update } from '../lib/store'
+import { finishQuiz, saveWord, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 import type { GlossWord } from '../lib/markup'
 
 export function Quiz({ state, id, go }: { state: AppState; id: string; go: (s: Screen) => void }) {
-  const article = ARTICLES.find((a) => a.id === id) ?? ARTICLES[0]
+  const en = state.lang === 'en'
+  const jaArticle = ARTICLES.find((a) => a.id === id) ?? ARTICLES[0]
+  const enArticle = ARTICLES_EN.find((a) => a.id === id) ?? ARTICLES_EN[0]
+  const article = en ? enArticle : jaArticle
   const [round, setRound] = useState(0)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const questions = useMemo(() => buildQuiz(article, wordsOf(article.paragraphs)), [article, round])
+  const questions = useMemo(
+    () => (en ? buildQuizEn(enArticle) : buildQuiz(jaArticle, wordsOf(jaArticle.paragraphs))),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [en, enArticle, jaArticle, round],
+  )
   const [index, setIndex] = useState(0)
   const [picked, setPicked] = useState<number | null>(null)
   const [score, setScore] = useState(0)
@@ -28,12 +35,7 @@ export function Quiz({ state, id, go }: { state: AppState; id: string; go: (s: S
   useEffect(() => {
     if (!over || reported.current) return
     reported.current = true
-    update((s) =>
-      completeTask(
-        addToday({ ...s, quizCorrect: s.quizCorrect + score, quizTotal: s.quizTotal + questions.length }, { quizCorrect: score, quizTotal: questions.length }),
-        'quiz',
-      ),
-    )
+    update((s) => finishQuiz(s, score, questions.length))
   }, [over, score, questions.length])
 
   useEffect(() => {
@@ -83,13 +85,15 @@ export function Quiz({ state, id, go }: { state: AppState; id: string; go: (s: S
               <div className="nums">
                 <div><b>{pct}%</b><span>정답률</span></div>
                 <div><b>{questions.length}</b><span>푼 문제</span></div>
-                <div><b>{wrong.length}</b><span>틀린 단어</span></div>
+                <div><b>{en ? questions.length - score : wrong.length}</b><span>{en ? '틀린 문제' : '틀린 단어'}</span></div>
               </div>
             </div>
-            <button className="btn mint block" type="button" disabled={added || newWrong.length === 0} onClick={addWrong}>
-              {added ? '담았어요' : newWrong.length ? `틀린 단어 ${newWrong.length}개 단어장에 담기` : '새로 담을 틀린 단어가 없어요'}
-            </button>
-            <button className="btn peach block" type="button" onClick={() => go({ name: 'vocab', tab: 'review' })}>단어장으로 가기</button>
+            {!en && (
+              <button className="btn mint block" type="button" disabled={added || newWrong.length === 0} onClick={addWrong}>
+                {added ? '담았어요' : newWrong.length ? `틀린 단어 ${newWrong.length}개 단어장에 담기` : '새로 담을 틀린 단어가 없어요'}
+              </button>
+            )}
+            <button className="btn peach block" type="button" onClick={() => go({ name: 'vocab', tab: en ? 'list' : 'review' })}>단어장으로 가기</button>
             <button className="btn ghost block" type="button" onClick={retry}>다시 풀기</button>
           </>
         ) : (
@@ -97,7 +101,7 @@ export function Quiz({ state, id, go }: { state: AppState; id: string; go: (s: S
             <span className="tag qkind">{q.kind} · {article.kr}</span>
             <div className="card qcard">
               <span className="ask">{q.ask}</span>
-              <div className={`stem ${q.small ? 'sm' : ''}`}>{q.stem}</div>
+              <div className={`stem ${q.small ? 'sm' : ''}`} lang={en ? 'en' : undefined}>{q.stem}</div>
             </div>
             <div className="opts">
               {q.opts.map((o, i) => (
