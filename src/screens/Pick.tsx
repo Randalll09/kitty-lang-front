@@ -1,18 +1,19 @@
 import { useState } from 'react'
-import { ARTICLES } from '../data/articles'
-import { charCount, plain } from '../lib/markup'
+import { LANG_LEVELS, LANG_NAME, LANG_TOPICS, firstArticleId, hasArticle, listArticles } from '../lib/content'
+import { rec } from '../lib/store'
 import type { Screen } from '../App'
-import type { AppState, Level, Topic } from '../types'
-
-const TOPICS: ('전체' | Topic)[] = ['전체', '뉴스', '일상', '문화']
-const LEVELS: Level[] = ['입문', '초급']
+import type { AppState } from '../types'
 
 export function Pick({ state, go }: { state: AppState; go: (s: Screen) => void }) {
-  const [level, setLevel] = useState<Level>('입문')
-  const [topic, setTopic] = useState<'전체' | Topic>('전체')
-  const [sel, setSel] = useState(state.lastArticle ?? ARTICLES[0].id)
+  const lang = state.lang
+  const topics = ['전체', ...LANG_TOPICS[lang]]
+  const levels = LANG_LEVELS[lang]
+  const [level, setLevel] = useState('입문')
+  const [topic, setTopic] = useState('전체')
+  const last = rec(state).lastArticle
+  const [sel, setSel] = useState(last && hasArticle(lang, last) ? last : firstArticleId(lang))
 
-  const list = ARTICLES.filter((a) => a.level === level && (topic === '전체' || a.topic === topic))
+  const list = listArticles(lang).filter((a) => a.level === level && (topic === '전체' || a.topic === topic))
   const current = list.find((a) => a.id === sel) ?? list[0]
 
   return (
@@ -20,15 +21,15 @@ export function Pick({ state, go }: { state: AppState; go: (s: Screen) => void }
       <div className="body">
         <div className="top">
           <h2 style={{ fontSize: 22 }}>글 고르기</h2>
-          <span className="chip lang">일본어</span>
+          <span className="chip lang">{LANG_NAME[lang]}</span>
         </div>
         <div className="seg" role="group" aria-label="난이도">
-          {LEVELS.map((l) => (
+          {levels.map((l) => (
             <button key={l} type="button" aria-pressed={level === l} onClick={() => setLevel(l)}>{l}</button>
           ))}
         </div>
         <div className="chips" role="group" aria-label="주제">
-          {TOPICS.map((t) => (
+          {topics.map((t) => (
             <button key={t} type="button" aria-pressed={topic === t} onClick={() => setTopic(t)}>{t}</button>
           ))}
         </div>
@@ -38,11 +39,11 @@ export function Pick({ state, go }: { state: AppState; go: (s: Screen) => void }
             const pg = state.progress[a.id] ?? 0
             return (
               <button key={a.id} type="button" className="art" aria-pressed={current?.id === a.id} onClick={() => setSel(a.id)}>
-                <span className="jp">{plain(a.title)}</span>
+                <span className={lang === 'en' ? 'jp en' : 'jp'}>{a.title}</span>
                 <span className="kr">{a.kr}</span>
                 <span className="meta">
                   <span className="tag">{a.topic}</span>
-                  <span>약 {Math.round(charCount(a.paragraphs) / 10) * 10}자 · 약 {a.minutes}분</span>
+                  <span>{a.size} · 약 {a.minutes}분</span>
                   {pg >= 100 ? (
                     <span className="tag done">완료</span>
                   ) : pg > 0 ? (
@@ -60,7 +61,7 @@ export function Pick({ state, go }: { state: AppState; go: (s: Screen) => void }
         </div>
       </div>
       <div className="cta">
-        <div className="t">선택한 글<b>{current ? plain(current.title) : ''}</b></div>
+        <div className="t">선택한 글<b>{current ? current.title : ''}</b></div>
         <button className="btn peach" type="button" disabled={!current} onClick={() => current && go({ name: 'read', id: current.id })}>
           읽기 시작
         </button>

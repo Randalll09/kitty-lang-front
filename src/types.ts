@@ -1,6 +1,7 @@
 export type Level = '입문' | '초급'
 export type Topic = '뉴스' | '일상' | '문화'
 export type Theme = 'system' | 'light' | 'dark'
+export type Lang = 'ja' | 'en'
 export type TaskId = 'review' | 'read' | 'quiz' | 'words'
 
 export interface QuizSeed {
@@ -34,6 +35,8 @@ export interface VocabEntry {
   context?: string
   /** 0 새 단어, 1 익히는 중, 2 외웠어요 */
   box: 0 | 1 | 2
+  /** 어느 학습 언어의 단어인지. 없으면 예전에 저장한 일본어 단어다. */
+  lang?: Lang
   /** 다음 복습일 YYYY-MM-DD */
   due: string
   addedAt: number
@@ -54,18 +57,26 @@ export interface Settings {
   theme: Theme
 }
 
-export interface AppState {
-  version: 1
-  words: Record<string, VocabEntry>
-  /** 글 id → 읽기 진행(0~100) */
-  progress: Record<string, number>
-  bookmarks: string[]
+/** 언어마다 따로 쌓는 기록. 일본어는 예전 저장 구조 그대로 AppState 바로 아래에, 영어는 AppState.en에 둔다. */
+export interface LangRecord {
   lastArticle: string | null
   days: Record<string, DayLog>
-  snacks: number
   articlesRead: number
   reviewedTotal: number
   quizCorrect: number
   quizTotal: number
+}
+
+export interface AppState extends LangRecord {
+  version: 1
+  /** 지금 배우는 언어 */
+  lang: Lang
+  words: Record<string, VocabEntry>
+  /** 글 id → 읽기 진행(0~100) */
+  progress: Record<string, number>
+  bookmarks: string[]
+  snacks: number
+  /** 영어 기록 */
+  en: LangRecord
   settings: Settings
 }

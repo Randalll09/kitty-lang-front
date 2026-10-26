@@ -1,7 +1,7 @@
 import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
-import { ARTICLES } from '../data/articles'
-import { DAILY_GOAL, TASK_MINUTES, dueWords, minutesToday, streak, tasksToday } from '../lib/store'
+import { LANG_NAME, listArticles } from '../lib/content'
+import { DAILY_GOAL, TASK_MINUTES, dueWords, minutesToday, rec, setLang, streak, tasksToday, wordsOfLang } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState, TaskId } from '../types'
 
@@ -11,14 +11,17 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
   // 하루 완료는 30분이 아니라 독해(글 읽기)를 끝냈는지로 정한다.
   const done = !!tasks.read
   const due = dueWords(state).length
-  const saved = Object.keys(state.words).length
-  const next = ARTICLES.find((a) => (state.progress[a.id] ?? 0) < 100) ?? ARTICLES[0]
-  const accuracy = state.quizTotal ? Math.round((state.quizCorrect / state.quizTotal) * 100) : null
+  const lang = state.lang
+  const r = rec(state)
+  const saved = wordsOfLang(state).length
+  const articles = listArticles(lang)
+  const next = articles.find((a) => (state.progress[a.id] ?? 0) < 100) ?? articles[0]
+  const accuracy = r.quizTotal ? Math.round((r.quizCorrect / r.quizTotal) * 100) : null
 
   const quests: { id: TaskId; title: string; sub: string; to: Screen }[] = [
     { id: 'review', title: '단어 복습', sub: due ? `복습할 단어 ${due}개` : '복습할 단어가 아직 없어요', to: { name: 'vocab', tab: 'review' } },
     { id: 'read', title: '글 한 편 읽기', sub: next.kr, to: { name: 'pick' } },
-    { id: 'quiz', title: '퀴즈 풀기', sub: '글 하나당 4문제', to: { name: 'quiz' } },
+    { id: 'quiz', title: '퀴즈 풀기', sub: lang === 'en' ? '글 하나당 3문제' : '글 하나당 4문제', to: { name: 'quiz' } },
     { id: 'words', title: '새 단어 확인', sub: `저장한 단어 ${saved}개`, to: { name: 'vocab', tab: 'list' } },
   ]
 
@@ -27,7 +30,9 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
   return (
     <div className="body">
       <div className="top">
-        <span className="chip lang">일본어</span>
+        <button className="chip lang swap" type="button" aria-label={`학습 언어: ${LANG_NAME[lang]}. 누르면 ${LANG_NAME[lang === 'en' ? 'ja' : 'en']}로 바꿔요`} onClick={() => setLang(lang === 'en' ? 'ja' : 'en')}>
+          {LANG_NAME[lang]} ⇄
+        </button>
         <div className="r">
           <span className="chip fire">연속 {streak(state)}일</span>
           <span className="chip coin">간식 {state.snacks}</span>
@@ -71,8 +76,8 @@ export function Home({ state, go }: { state: AppState; go: (s: Screen) => void }
         </div>
         <div className="mystats">
           <div><b>{minutes}분</b><span>오늘 학습 시간</span></div>
-          <div><b>{state.articlesRead}편</b><span>읽은 글</span></div>
-          <div><b>{state.reviewedTotal}개</b><span>복습 단어</span></div>
+          <div><b>{r.articlesRead}편</b><span>읽은 글</span></div>
+          <div><b>{r.reviewedTotal}개</b><span>복습 단어</span></div>
           <div><b>{streak(state)}일</b><span>연속 일수</span></div>
           <div><b>{accuracy === null ? '-' : `${accuracy}%`}</b><span>정답률</span></div>
           <div><b>{saved}개</b><span>저장한 단어</span></div>

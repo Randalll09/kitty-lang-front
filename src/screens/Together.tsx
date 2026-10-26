@@ -5,7 +5,7 @@ import {
   type CheerKind, type GoalMetric, connected, createGoal, deleteGoal, markCheersRead, partnerRead, partnerStreak,
   sendCheer, signIn, signOut, signUp, signedIn, sync, unreadCheers, updateName, useSocial,
 } from '../lib/social'
-import { minutesToday } from '../lib/store'
+import { dayTotals } from '../lib/store'
 import type { AppState } from '../types'
 
 const CHEERS: [CheerKind, string][] = [['cheer', '응원해요 📣'], ['nudge', '콕 찔러요 👉'], ['congrats', '축하해요 🎉']]
@@ -242,7 +242,7 @@ export function Together({ state }: { state: AppState }) {
             </>
           )}
         </div>
-        <span className="soft small">{social.email} · 오늘 {minutesToday(state)}분 기록 중</span>
+        <span className="soft small">{social.email} · 오늘 {dayTotals(state, today()).minutes}분 기록 중</span>
         <button className="btn ghost block" type="button" onClick={() => { if (confirm('로그아웃할까요? 이 폰의 학습 기록은 그대로 남아요.')) void signOut() }}>로그아웃</button>
       </div>
     </div>

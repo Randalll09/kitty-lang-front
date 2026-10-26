@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
-import { completeTask, dueWords, gradeWord, removeWord, setMeaning, update } from '../lib/store'
+import { completeTask, dueWords, gradeWord, removeWord, setMeaning, update, wordsOfLang } from '../lib/store'
 import type { AppState } from '../types'
 
 const ST = ['새 단어', '익히는 중', '외웠어요']
@@ -8,7 +8,7 @@ const FILTERS = ['전체', ...ST]
 
 export function Vocab({ state, initialTab }: { state: AppState; initialTab?: 'list' | 'review' }) {
   const [tab, setTab] = useState<'list' | 'review'>(initialTab ?? 'review')
-  const count = Object.keys(state.words).length
+  const count = wordsOfLang(state).length
 
   useEffect(() => {
     if (tab === 'list') update((s) => completeTask(s, 'words'))
@@ -31,7 +31,7 @@ export function Vocab({ state, initialTab }: { state: AppState; initialTab?: 'li
 
 function List({ state }: { state: AppState }) {
   const [filter, setFilter] = useState('전체')
-  const rows = Object.values(state.words)
+  const rows = wordsOfLang(state)
     .sort((a, b) => b.addedAt - a.addedAt)
     .filter((w) => filter === '전체' || ST[w.box] === filter)
   return (
@@ -44,7 +44,7 @@ function List({ state }: { state: AppState }) {
       <div className="wl">
         {rows.length === 0 && (
           <p className="soft center" style={{ margin: '24px 0' }}>
-            {Object.keys(state.words).length ? '해당하는 단어가 없어요' : '글을 읽다가 모르는 단어를 눌러 저장해 보세요'}
+            {wordsOfLang(state).length ? '해당하는 단어가 없어요' : '글을 읽다가 모르는 단어를 눌러 저장해 보세요'}
           </p>
         )}
         {rows.map((w) => (
@@ -97,7 +97,7 @@ function Review({ state }: { state: AppState }) {
   }
 
   if (finished) {
-    const mastered = Object.values(state.words).filter((w) => w.box === 2).length
+    const mastered = wordsOfLang(state).filter((w) => w.box === 2).length
     return (
       <>
         <div className="card rdone">
