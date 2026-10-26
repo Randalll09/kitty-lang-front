@@ -1,13 +1,13 @@
 import { useSyncExternalStore } from 'react'
 import { addDays, today } from './dates'
-import { minutesOn } from './store'
+import { minutesOn, rec } from './store'
 import { configured, supabase } from './supabase'
-import type { AppState } from '../types'
+import type { AppState, Lang } from '../types'
 
 /* 서버에는 숫자만 올린다. 글, 단어, 퀴즈 내용은 올라가지 않는다. */
 
 const KEY = 'kitty-social-v1'
-const LANGUAGE = 'ja'
+const LANGUAGES: Lang[] = ['ja', 'en']
 const WINDOW_DAYS = 62
 
 export type CheerKind = 'cheer' | 'nudge' | 'congrats'
@@ -41,6 +41,7 @@ interface Cache {
   userId: string | null
   email: string | null
   name: string
+  inviteCode: string
   friendshipId: string | null
   partnerId: string | null
   partnerName: string
@@ -64,6 +65,7 @@ const emptyCache = (): Cache => ({
   userId: null,
   email: null,
   name: '',
+  inviteCode: '',
   friendshipId: null,
   partnerId: null,
   partnerName: '',
@@ -123,6 +125,9 @@ const MESSAGES: [RegExp, string][] = [
   [/password should be at least/i, '비밀번호는 6자 이상이어야 해요.'],
   [/email not confirmed/i, '이메일 확인이 켜져 있어요. Supabase 설정에서 Confirm email 을 꺼 주세요.'],
   [/valid email|invalid email/i, '이메일 주소를 확인해 주세요.'],
+  [/invalid invite code/i, '없는 코드예요. 친구의 코드를 다시 확인해 주세요.'],
+  [/cannot connect with yourself/i, '내 코드예요. 친구의 코드를 넣어 주세요.'],
+  [/already (paired|connected)/i, '이미 다른 사람과 이어져 있어요.'],
 ]
 
 function explain(e: unknown) {
@@ -162,10 +167,10 @@ function adopt(userId: string, email: string | null) {
 
 /* ---------- 동기화 ---------- */
 
-const dayPayload = (s: AppState, day: string) => {
-  const log = s.days[day]
+const dayPayload = (s: AppState, day: string, lang: Lang) => {
+  const log = rec(s, lang).days[day]
   return {
-    study_seconds: minutesOn(s, day) * 60,
+    study_seconds: minutesOn(s, day, lang) * 60,
     articles_read: log?.articles ?? 0,
     words_reviewed: log?.reviewed ?? 0,
     quiz_correct: Math.min(log?.quizCorrect ?? 0, log?.quizTotal ?? 0),
@@ -177,26 +182,29 @@ async function pushDays(app: AppState) {
   if (!supabase || !state.userId) return
   const from = addDays(today(), -WINDOW_DAYS)
   const pushed = { ...state.pushed }
-  for (const day of Object.keys(app.days)) {
+  const entries = LANGUAGES.flatMap((language) => Object.keys(rec(app, language).days).map((day) => ({ language, day })))
+  for (const { language, day } of entries) {
     if (day < from) continue
-    const nums = dayPayload(app, day)
+    const nums = dayPayload(app, day, language)
     if (Object.values(nums).every((n) => n === 0)) continue
     const sig = JSON.stringify(nums)
-    if (pushed[day] === sig) continue
+    // 일본어는 예전과 같은 키(날짜)를 쓰고, 영어는 앞에 언어를 붙인다.
+    const pk = language === 'ja' ? day : `${language}:${day}`
+    if (pushed[pk] === sig) continue
     // 키 열(user_id, day, language)은 수정 권한이 없어서 upsert 대신 수정 → 없으면 추가 순서로 올린다.
     const upd = await supabase
       .from('daily_progress')
       .update(nums)
       .eq('user_id', state.userId)
       .eq('day', day)
-      .eq('language', LANGUAGE)
+      .eq('language', language)
       .select('day')
     if (upd.error) throw upd.error
     if (!upd.data.length) {
-      const ins = await supabase.from('daily_progress').insert({ user_id: state.userId, day, language: LANGUAGE, ...nums })
+      const ins = await supabase.from('daily_progress').insert({ user_id: state.userId, day, language, ...nums })
       if (ins.error) throw ins.error
     }
-    pushed[day] = sig
+    pushed[pk] = sig
   }
   set({ pushed })
 }
@@ -214,22 +222,15 @@ async function flushCheers() {
 async function pull() {
   if (!supabase || !state.userId) return
   const me = state.userId
-  const mine = await supabase.from('profiles').select('display_name').eq('id', me).maybeSingle()
+  const mine = await supabase.from('profiles').select('display_name, invite_code').eq('id', me).maybeSingle()
   if (mine.error) throw mine.error
-  let fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
+  // 친구 연결은 초대 코드로만 한다(connectWithCode).
+  const fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
   if (fr.error) throw fr.error
-  if (!fr.data) {
-    // 두 사람만 쓰는 앱이라 초대 코드 없이, 아직 짝이 없는 다른 사람과 자동으로 이어진다.
-    const pair = await supabase.rpc('connect_partner')
-    if (pair.error) throw pair.error
-    if (pair.data) {
-      fr = await supabase.from('friendships').select('id, user_a, user_b').limit(1).maybeSingle()
-      if (fr.error) throw fr.error
-    }
-  }
 
   const patch: Partial<SocialState> = {
     name: mine.data?.display_name ?? '',
+    inviteCode: mine.data?.invite_code ?? '',
     friendshipId: fr.data?.id ?? null,
     partnerId: fr.data ? (fr.data.user_a === me ? fr.data.user_b : fr.data.user_a) : null,
   }
@@ -327,6 +328,16 @@ export async function updateName(name: string) {
   const next = name.trim().slice(0, 20)
   await run(() => supabase!.from('profiles').update({ display_name: next }).eq('id', state.userId!))
   set({ name: next })
+}
+
+/** 친구의 초대 코드로 바로 이어진다. 이어지면 친구 기록까지 받아 온다. */
+export async function connectWithCode(code: string, app: AppState) {
+  if (!supabase || !state.userId) return
+  const trimmed = code.trim()
+  if (!trimmed) throw new Error('친구의 코드를 넣어 주세요.')
+  if (state.partnerId) throw new Error(explain(new Error('already connected')))
+  await run(() => supabase!.rpc('connect_with_code', { p_code: trimmed }))
+  await sync(app)
 }
 
 /** 인터넷이 없어도 눌러 두면 연결될 때 보낸다. */

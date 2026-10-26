@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { ARTICLES } from './data/articles'
-import { useAppState } from './lib/store'
+import { firstArticleId, hasArticle } from './lib/content'
+import { rec, useAppState } from './lib/store'
 import { NavBar } from './components/NavBar'
 import { Home } from './screens/Home'
 import { Pick } from './screens/Pick'
 import { Read } from './screens/Read'
+import { ReadEn } from './screens/ReadEn'
 import { Quiz } from './screens/Quiz'
 import { Vocab } from './screens/Vocab'
 import { Settings } from './screens/Settings'
@@ -46,6 +47,11 @@ export default function App() {
     else root.dataset.theme = state.settings.theme
   }, [state.settings.theme])
 
+  // 학습 언어에 따라 포인트 색이 달라진다.
+  useEffect(() => {
+    document.documentElement.dataset.lang = state.lang
+  }, [state.lang])
+
   // 로컬 기록이 바뀌면 잠시 뒤 서버에 올리고, 앱을 열거나 인터넷이 돌아오거나 1분마다 한 번 더 맞춘다.
   const latest = useRef(state)
   latest.current = state
@@ -53,7 +59,7 @@ export default function App() {
     if (!supabase) return
     const t = setTimeout(() => void sync(latest.current), 3000)
     return () => clearTimeout(t)
-  }, [state.days])
+  }, [state.days, state.en.days])
   useEffect(() => {
     if (!supabase) return
     const now = () => void sync(latest.current)
@@ -72,19 +78,24 @@ export default function App() {
   }, [])
 
   const back = () => history.back()
-  const quizId = screen.name === 'quiz' ? (screen.id ?? state.lastArticle ?? ARTICLES[0].id) : ''
+  // 뒤로가기로 다른 언어의 글 화면이 다시 나오면 홈을 보여 준다.
+  const stale = (screen.name === 'read' || (screen.name === 'quiz' && screen.id)) && !hasArticle(state.lang, screen.id!)
+  const last = rec(state).lastArticle
+  const quizId = screen.name === 'quiz' ? (screen.id ?? (last && hasArticle(state.lang, last) ? last : firstArticleId(state.lang))) : ''
+  const view = stale ? { name: 'home' as const } : screen
 
   return (
     <div className="app">
-      {screen.name === 'home' && <Home state={state} go={go} />}
-      {screen.name === 'pick' && <Pick state={state} go={go} />}
-      {screen.name === 'read' && <Read key={screen.id} state={state} id={screen.id} go={go} back={back} />}
-      {screen.name === 'quiz' && <Quiz key={quizId} state={state} id={quizId} go={go} />}
-      {screen.name === 'vocab' && <Vocab state={state} initialTab={screen.tab} />}
-      {screen.name === 'cal' && <Calendar state={state} />}
-      {screen.name === 'together' && <Together state={state} />}
-      {screen.name === 'settings' && <Settings state={state} go={go} />}
-      {screen.name !== 'read' && <NavBar active={screen.name} go={go} />}
+      {view.name === 'home' && <Home state={state} go={go} />}
+      {view.name === 'pick' && <Pick key={state.lang} state={state} go={go} />}
+      {view.name === 'read' && state.lang === 'ja' && <Read key={view.id} state={state} id={view.id} go={go} back={back} />}
+      {view.name === 'read' && state.lang === 'en' && <ReadEn key={view.id} state={state} id={view.id} go={go} back={back} />}
+      {view.name === 'quiz' && <Quiz key={`${state.lang}-${quizId}`} state={state} id={quizId} go={go} />}
+      {view.name === 'vocab' && <Vocab key={state.lang} state={state} initialTab={view.tab} />}
+      {view.name === 'cal' && <Calendar state={state} />}
+      {view.name === 'together' && <Together state={state} />}
+      {view.name === 'settings' && <Settings state={state} go={go} />}
+      {view.name !== 'read' && <NavBar active={view.name} go={go} />}
     </div>
   )
 }

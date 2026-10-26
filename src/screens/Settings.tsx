@@ -1,4 +1,4 @@
-import { FONT_SIZES, resetAll, update } from '../lib/store'
+import { FONT_SIZES, resetAll, setLang, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState, Theme } from '../types'
 
@@ -15,19 +15,22 @@ export function Settings({ state, go }: { state: AppState; go: (s: Screen) => vo
       <div className="card set">
         <h2>학습 언어</h2>
         <div className="seg" role="group" aria-label="학습 언어">
-          <button type="button" aria-pressed="true">일본어</button>
-          <button type="button" aria-pressed="false" disabled>영어 (준비 중)</button>
+          <button type="button" aria-pressed={state.lang === 'ja'} onClick={() => setLang('ja')}>일본어</button>
+          <button type="button" aria-pressed={state.lang === 'en'} onClick={() => setLang('en')}>영어</button>
         </div>
+        <p className="soft small">글, 단어장, 연속 일수와 정답률이 언어마다 따로 쌓여요.</p>
       </div>
 
       <div className="card set">
         <h2>읽기</h2>
-        <div className="row">
-          <span>후리가나 기본 보기</span>
-          <button className="sw" type="button" aria-pressed={settings.furigana} onClick={() => set({ furigana: !settings.furigana })}>
-            <span className="knob" />{settings.furigana ? '켜짐' : '꺼짐'}
-          </button>
-        </div>
+        {state.lang === 'ja' && (
+          <div className="row">
+            <span>후리가나 기본 보기</span>
+            <button className="sw" type="button" aria-pressed={settings.furigana} onClick={() => set({ furigana: !settings.furigana })}>
+              <span className="knob" />{settings.furigana ? '켜짐' : '꺼짐'}
+            </button>
+          </div>
+        )}
         <div className="row">
           <span>글씨 크기</span>
           <div className="sz">

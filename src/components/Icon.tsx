@@ -41,6 +41,12 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   mark: <path d="M7 4h10v16l-5-4-5 4z" />,
+  pen: (
+    <>
+      <path d="M4 20l1-4L16.5 4.5a2.1 2.1 0 0 1 3 3L8 19z" />
+      <path d="M14.5 6.5l3 3" />
+    </>
+  ),
   back: <path d="M15 5l-7 7 7 7" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
 }

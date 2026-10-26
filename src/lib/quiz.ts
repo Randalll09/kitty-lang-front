@@ -1,4 +1,5 @@
 import type { Article } from '../types'
+import type { ArticleEn } from '../data/articles.en'
 import { ALL_WORDS, type GlossWord } from './markup'
 
 export interface Question {
@@ -76,4 +77,13 @@ export function buildQuiz(article: Article, articleWords: GlossWord[]): Question
     })
   }
   return out
+}
+
+/** 영어 글은 글마다 딸린 독해 질문 3개를 그대로 쓴다. 해설은 한국어. */
+export function buildQuizEn(article: ArticleEn): Question[] {
+  return article.quiz.map((q) => {
+    const right = q.opts[0]
+    const opts = shuffle([...q.opts])
+    return { kind: q.kind, ask: q.ask, stem: q.stem, small: true, opts, answer: opts.indexOf(right), exp: q.exp }
+  })
 }
