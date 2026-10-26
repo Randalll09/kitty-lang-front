@@ -3,6 +3,7 @@ import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES_EN } from '../data/articles.en'
 import { FONT_SIZES, finishArticle, removeWord, saveWord, setLastArticle, update } from '../lib/store'
+import { useUnderline } from '../lib/underline'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 
@@ -44,7 +45,7 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
   const maxPct = useRef(state.progress[article.id] ?? 0)
   const [pct, setPct] = useState(0)
   const [para, setPara] = useState(1)
-  const [active, setActive] = useState<{ key: string; word: string; sentence: string } | null>(null)
+  const [active, setActive] = useState<{ key: string; word: string; sentence: string; para: number; s: number; e: number } | null>(null)
   const [toast, setToast] = useState('')
   const press = useRef<{ timer: number; x: number; y: number } | null>(null)
   const longPressed = useRef(false)
@@ -84,6 +85,9 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
     setToast(t)
     setTimeout(() => setToast(''), 1600)
   }
+
+  const ul = useUnderline({ articleId: article.id, title: article.title, lang: 'en', texts: article.paragraphs, scroller, state, flash })
+  const activeMark = active ? ul.markFor(active.para, active.s, active.e) : undefined
 
   const toggleBookmark = () => {
     update((s) => ({ ...s, bookmarks: bookmarked ? s.bookmarks.filter((b) => b !== article.id) : [...s.bookmarks, article.id] }))
@@ -147,7 +151,7 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
         <span>문단 {para}/{article.paragraphs.length}</span>
       </div>
 
-      <div ref={scroller} className={`body rscroll ${active ? 'hasPop' : ''}`} onScroll={measure}>
+      <div ref={scroller} className={`body rscroll ${active && !ul.pen ? 'hasPop' : ''}`} onScroll={measure}>
         <div className="ahead">
           <div className="meta"><span className="tag">{article.topic}</span><span className="tag">{article.level}</span></div>
           <h1 className="en" lang="en">{article.title}</h1>
@@ -156,31 +160,36 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
             <span>{pct > 0.97 ? '끝까지 읽었어요' : `약 ${minutesLeft}분 남음`}</span>
           </div>
         </div>
-        <p className="hint">모르는 단어를 꾹 누르면 그 단어와 문장이 단어장에 저장돼요. 뜻은 단어장에서 적어요.</p>
-        <div className="rpages en" lang="en" style={{ fontSize: fs }}>
+        <p className="hint">모르는 단어를 꾹 누르면 그 단어와 문장이 단어장에 저장돼요. 뜻은 단어장에서 적어요. 밑줄 펜을 켜면 글을 끌어서 밑줄을 그을 수 있어요.</p>
+        <div className={`rpages en ${ul.pen ? 'pen' : ''}`} lang="en" style={{ fontSize: fs }} {...ul.bind}>
           {article.paragraphs.map((text, i) => (
             <p key={i} className="rp">
-              {split(text).map((p, j) => {
-                if ('text' in p) return <Fragment key={j}>{p.text}</Fragment>
+              {split(text).map((p, j, all) => {
+                // 이 조각의 글자 위치: 앞 조각들의 길이 합
+                const start = 'word' in p ? p.start : all.slice(0, j).reduce((n, q) => n + ('word' in q ? q.word.length : q.text.length), 0)
+                if ('text' in p) return <Fragment key={j}>{ul.chars(p.text, start, i)}</Fragment>
                 const key = keyOf(p.word)
                 const sentence = sentenceAt(text, p.start)
+                const e = p.start + p.word.length
                 return (
                   <button
                     key={j}
                     type="button"
-                    className={`w ${active?.key === key ? 'on' : ''} ${state.words[key] ? 'saved' : ''}`}
-                    onPointerDown={(e) => startPress(e, key, sentence)}
-                    onPointerMove={movePress}
-                    onPointerUp={cancelPress}
-                    onPointerCancel={cancelPress}
-                    onPointerLeave={cancelPress}
-                    onContextMenu={(e) => e.preventDefault()}
+                    className={`w ${active?.key === key ? 'on' : ''} ${state.words[key] ? 'saved' : ''} ${ul.cls(i, p.start, e)}`}
+                    {...ul.attrs(i, p.start, e)}
+                    onPointerDown={ul.pen ? undefined : (ev) => startPress(ev, key, sentence)}
+                    onPointerMove={ul.pen ? undefined : movePress}
+                    onPointerUp={ul.pen ? undefined : cancelPress}
+                    onPointerCancel={ul.pen ? undefined : cancelPress}
+                    onPointerLeave={ul.pen ? undefined : cancelPress}
+                    onContextMenu={(ev) => ev.preventDefault()}
                     onClick={() => {
+                      if (ul.pen) return
                       if (longPressed.current) return void (longPressed.current = false)
-                      setActive(active?.key === key ? null : { key, word: p.word, sentence })
+                      setActive(active?.key === key ? null : { key, word: p.word, sentence, para: i, s: p.start, e })
                     }}
                   >
-                    {p.word}
+                    {p.word}{ul.badge(i, e)}
                   </button>
                 )
               })}
@@ -207,6 +216,7 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
       </div>
 
       <div className="tools">
+        {ul.penButton}
         <div className="sz">
           <span>글씨</span>
           <button type="button" aria-label="글씨 작게" disabled={settings.fontIndex === 0} onClick={() => setFont(-1)}>가</button>
@@ -214,7 +224,7 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
         </div>
       </div>
 
-      {active && (
+      {active && !ul.pen && (
         <div className="pop">
           <div className="hd">
             <span className="jp en" lang="en">{active.word}</span>
@@ -228,10 +238,14 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
             >
               {activeSaved ? '저장됨' : '단어 저장'}
             </button>
+            {activeMark && (
+              <button className="btn ask" type="button" onClick={() => { setActive(null); ul.open(activeMark.id) }}>밑줄 질문</button>
+            )}
             <button className="btn ghost sq" type="button" onClick={() => setActive(null)}>닫기</button>
           </div>
         </div>
       )}
+      {ul.sheet}
       <div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div>
     </>
   )

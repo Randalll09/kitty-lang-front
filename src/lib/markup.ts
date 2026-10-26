@@ -72,3 +72,18 @@ export function sentenceAt(pieces: Piece[], index: number) {
   }
   return full.slice(start).trim()
 }
+
+/** plain(src)의 [from, to) 구간을 히라가나(읽는 법)로 바꾼 글. 한자 단어는 읽는 법으로, 나머지는 그대로 둔다. */
+export function readingRange(src: string, from: number, to: number) {
+  let at = 0
+  let out = ''
+  for (const p of parse(src)) {
+    const text = 'text' in p ? p.text : p.token.surface + p.token.tail
+    const start = at
+    at += text.length
+    if (at <= from || start >= to) continue
+    if ('text' in p) out += text.slice(Math.max(from, start) - start, Math.min(to, at) - start)
+    else out += tokenReading(p.token) || text
+  }
+  return out
+}

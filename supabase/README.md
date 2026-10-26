@@ -33,9 +33,24 @@ Supabase 프로젝트의 SQL Editor에 `migrations/*.sql`을 **파일 이름 순
 
 비밀번호와 service_role key는 저장소에 넣지 않아요. 앱에는 Project URL 과 anon key 만 써요.
 
+## 밑줄 질문 (Edge Function `ask`)
+읽기 화면에서 밑줄 친 부분을 Claude에게 물어보는 기능이에요. 앱이 Anthropic 에 직접 가지 않고, `functions/ask` 가 서버에서 키를 가지고 대신 호출해요.
+
+- 키(`ANTHROPIC_API_KEY`)는 **Supabase secrets 에만** 둬요. 앱, 저장소, `.env` 에는 넣지 않아요.
+- 로그인한 사용자만 쓸 수 있어요. 로그인 토큰을 확인하고, anon key 만으로는 거절해요.
+- 남용 방지: 하루 40번(`ASK_DAILY_LIMIT`)과 2초 간격을 `take_ask_quota` 가 세요. 질문 내용은 저장하지 않고 횟수만 저장해요.
+- 모델은 `claude-haiku-5-5` (가장 빠르고 싼 최신 모델, 입력 $0.10 / 출력 $0.50 per 1M 토큰). `ASK_MODEL` 로 바꿀 수 있어요.
+- 함수가 없거나 인터넷이 없어도 앱은 "지금은 물어볼 수 없어요"만 보여 줘요.
+
+켜는 순서:
+1. SQL Editor 에서 `migrations/20261026090000_ask_quota.sql` 을 실행해요.
+2. Supabase 대시보드 → Edge Functions → Secrets 에 `ANTHROPIC_API_KEY` 를 추가해요. (CLI: `supabase secrets set ANTHROPIC_API_KEY=...`) 키는 Anthropic Console 에서 만들고, 대화창에는 붙여 넣지 않아요.
+3. 함수를 배포해요. CLI: `supabase functions deploy ask --project-ref <프로젝트 ref>`. 대시보드: Edge Functions → Deploy a new function → 이름 `ask` → `functions/ask/index.ts` 내용을 붙여 넣어요.
+
+`SUPABASE_URL` 과 `SUPABASE_SERVICE_ROLE_KEY` 는 Supabase 가 함수에 자동으로 넣어 줘요.
+
 ## 테스트
 저장소 루트에서 `bash supabase/tests/run.sh` (Postgres 16 필요). 임시 DB에 auth 스키마 스텁을 깔고 마이그레이션과 RLS를 검증해요.
 
 ## 아직 없는 것
 - 푸시 알림 전송(응원은 저장만 하며 앱이 열릴 때 가져와요)
-- 2단계 AI 문장 설명
