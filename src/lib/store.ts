@@ -108,10 +108,15 @@ export function addToday(s: AppState, add: Partial<Record<'articles' | 'reviewed
 
 /* ---------- 단어 ---------- */
 
-export function saveWord(s: AppState, w: Pick<VocabEntry, 'key' | 'reading' | 'meaning' | 'source'>): AppState {
+export function saveWord(s: AppState, w: Pick<VocabEntry, 'key' | 'reading' | 'meaning' | 'source'> & { context?: string }): AppState {
   if (s.words[w.key]) return s
   const entry: VocabEntry = { ...w, box: 0, due: today(), addedAt: Date.now() }
   return { ...s, words: { ...s.words, [w.key]: entry } }
+}
+
+export function setMeaning(s: AppState, key: string, meaning: string): AppState {
+  const w = s.words[key]
+  return w ? { ...s, words: { ...s.words, [key]: { ...w, meaning: meaning.trim() } } } : s
 }
 
 export function removeWord(s: AppState, key: string): AppState {

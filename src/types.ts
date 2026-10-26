@@ -30,6 +30,8 @@ export interface VocabEntry {
   reading: string
   meaning: string
   source: string
+  /** 단어가 나온 문장. 뜻이 비어 있는 단어(뜻풀이 없는 글)를 나중에 채울 때 보여 준다. */
+  context?: string
   /** 0 새 단어, 1 익히는 중, 2 외웠어요 */
   box: 0 | 1 | 2
   /** 다음 복습일 YYYY-MM-DD */

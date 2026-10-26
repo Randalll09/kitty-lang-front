@@ -2,7 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
-import { charCount, parse, tokenKey, tokenReading, type Token } from '../lib/markup'
+import { charCount, parse, sentenceAt, tokenKey, tokenReading, type Piece, type Token } from '../lib/markup'
 import { FONT_SIZES, addToday, completeTask, saveWord, removeWord, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
@@ -24,6 +24,8 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const [para, setPara] = useState(1)
   const [active, setActive] = useState<Token | null>(null)
   const [toast, setToast] = useState('')
+  const press = useRef<{ timer: number; x: number; y: number } | null>(null)
+  const longPressed = useRef(false)
   const finished = (state.progress[article.id] ?? 0) >= 100
   const bookmarked = state.bookmarks.includes(article.id)
 
@@ -71,6 +73,35 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
     update((s) => (s.words[key] ? removeWord(s, key) : saveWord(s, { key, reading: tokenReading(t), meaning: t.meaning, source: article.kr })))
   }
 
+  // 꾹 누르면 뜻 말풍선 없이 바로 저장한다. 이미 저장한 단어는 그대로 둔다.
+  const quickSave = (t: Token, pieces: Piece[], index: number) => {
+    const key = tokenKey(t)
+    navigator.vibrate?.(30)
+    if (state.words[key]) return flash(`${key}는 이미 저장했어요`)
+    update((s) => saveWord(s, { key, reading: tokenReading(t), meaning: t.meaning, source: article.kr, context: sentenceAt(pieces, index) }))
+    flash(`${key} 저장했어요`)
+  }
+  const cancelPress = () => {
+    if (press.current) clearTimeout(press.current.timer)
+    press.current = null
+  }
+  const startPress = (e: React.PointerEvent, t: Token, pieces: Piece[], index: number) => {
+    longPressed.current = false
+    press.current = {
+      x: e.clientX,
+      y: e.clientY,
+      timer: window.setTimeout(() => {
+        longPressed.current = true
+        press.current = null
+        quickSave(t, pieces, index)
+      }, 500),
+    }
+  }
+  const movePress = (e: React.PointerEvent) => {
+    if (press.current && Math.hypot(e.clientX - press.current.x, e.clientY - press.current.y) > 10) cancelPress()
+  }
+  useEffect(() => cancelPress, [])
+
   const savedKeys = state.words
   const activeSaved = active ? !!savedKeys[tokenKey(active)] : false
   const sessionWords = Object.values(savedKeys).filter((w) => w.source === article.kr).length
@@ -108,11 +139,11 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
             <span>{pct > 0.97 ? '끝까지 읽었어요' : `약 ${minutesLeft}분 남음`}</span>
           </div>
         </div>
-        <p className="hint">모르는 단어를 누르면 뜻이 나와요. 저장한 단어는 단어장에 모여요.</p>
+        <p className="hint">단어를 누르면 뜻이 나와요. 꾹 누르면 바로 단어장에 저장돼요.</p>
         <div className="rpages" style={{ fontSize: fs }}>
           {article.paragraphs.map((para, i) => (
             <p key={i} className="rp">
-              {parse(para).map((p, j) =>
+              {parse(para).map((p, j, pieces) =>
                 'text' in p ? (
                   <Fragment key={j}>{p.text}</Fragment>
                 ) : (
@@ -120,7 +151,16 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
                     key={j}
                     type="button"
                     className={`w ${active && tokenKey(active) === tokenKey(p.token) ? 'on' : ''} ${savedKeys[tokenKey(p.token)] ? 'saved' : ''}`}
-                    onClick={() => setActive(active && tokenKey(active) === tokenKey(p.token) ? null : p.token)}
+                    onPointerDown={(e) => startPress(e, p.token, pieces, j)}
+                    onPointerMove={movePress}
+                    onPointerUp={cancelPress}
+                    onPointerCancel={cancelPress}
+                    onPointerLeave={cancelPress}
+                    onContextMenu={(e) => e.preventDefault()}
+                    onClick={() => {
+                      if (longPressed.current) return void (longPressed.current = false)
+                      setActive(active && tokenKey(active) === tokenKey(p.token) ? null : p.token)
+                    }}
                   >
                     <Ruby t={p.token} />{p.token.tail}
                   </button>
