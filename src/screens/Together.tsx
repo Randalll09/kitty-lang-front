@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { configured } from '../lib/supabase'
 import { addDays, today } from '../lib/dates'
 import {
-  type CheerKind, type GoalMetric, connected, createGoal, deleteGoal, markCheersRead, partnerRead, partnerStreak,
+  type CheerKind, type GoalMetric, connectWithCode, connected, createGoal, deleteGoal, markCheersRead, partnerRead, partnerStreak,
   sendCheer, signIn, signOut, signUp, signedIn, sync, unreadCheers, updateName, useSocial,
 } from '../lib/social'
 import { minutesToday } from '../lib/store'
@@ -32,6 +32,8 @@ export function Together({ state }: { state: AppState }) {
   const [target, setTarget] = useState('10')
   const [days, setDays] = useState(7)
   const [adding, setAdding] = useState(false)
+  const [code, setCode] = useState('')
+  const [copied, setCopied] = useState(false)
 
   const hasPartner = connected(social)
   const unread = unreadCheers(social)
@@ -108,7 +110,7 @@ export function Together({ state }: { state: AppState }) {
           {error && <p className="err" role="alert">{error}</p>}
           <button className="btn peach block" type="submit" disabled={busy}>{busy ? '잠깐만요…' : up ? '가입하고 시작' : '로그인'}</button>
           <p className="soft small" style={{ margin: 0 }}>
-            친구도 같은 방법으로 가입하면 자동으로 이어져요. 서버에는 학습 시간, 읽은 글 수 같은 숫자만 올라가고 글이나 단어 내용은 올라가지 않아요.
+            친구도 같은 방법으로 가입한 뒤 초대 코드로 이어져요. 서버에는 학습 시간, 읽은 글 수 같은 숫자만 올라가고 글이나 단어 내용은 올라가지 않아요.
           </p>
         </form>
       </div>
@@ -133,8 +135,32 @@ export function Together({ state }: { state: AppState }) {
 
       {!hasPartner ? (
         <div className="card tg">
-          <h2>친구를 기다리고 있어요</h2>
-          <p className="soft small" style={{ margin: 0 }}>친구가 같은 앱에서 가입하면 자동으로 이어져요. 이어지면 여기에 친구의 오늘 기록이 나와요.</p>
+          <h2>친구와 이어져요</h2>
+          <p className="soft small" style={{ margin: 0 }}>내 코드를 친구에게 알려 주거나, 친구가 알려 준 코드를 넣어 주세요. 이어지면 여기에 친구의 오늘 기록이 나와요.</p>
+          <div className="line">
+            <span>내 코드 <b style={{ letterSpacing: 2 }}>{social.inviteCode || '…'}</b></span>
+            <button
+              className="btn ghost sm"
+              type="button"
+              disabled={!social.inviteCode}
+              onClick={() => {
+                void navigator.clipboard?.writeText(social.inviteCode).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000) }, () => {})
+              }}
+            >{copied ? '복사했어요' : '복사'}</button>
+          </div>
+          <form
+            className="tg"
+            onSubmit={(e) => {
+              e.preventDefault()
+              void guard(async () => { await connectWithCode(code, state); setCode('') })
+            }}
+          >
+            <label className="field">친구의 코드
+              <input value={code} maxLength={16} autoCapitalize="characters" autoComplete="off" onChange={(e) => setCode(e.target.value.toUpperCase())} />
+            </label>
+            {error && <p className="err" role="alert">{error}</p>}
+            <button className="btn peach block" type="submit" disabled={busy || !code.trim()}>{busy ? '잠깐만요…' : '이어지기'}</button>
+          </form>
           <button className="btn ghost block" type="button" onClick={() => void sync(state)}>지금 확인</button>
         </div>
       ) : (
