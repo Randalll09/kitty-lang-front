@@ -76,5 +76,16 @@ select pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
 select 'do $x$ begin perform public.connect_with_code(' || quote_literal(:'d_code') || '); raise exception ''third connect allowed''; exception when others then if sqlerrm <> ''already paired'' then raise; end if; end $x$' \gexec
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select count(*) = 1 as d_sees_one_pair from public.friendships;
+-- 밑줄 질문 호출 제한: 한도 2회까지 세고 그 뒤는 -1, 앱 사용자는 표와 함수에 접근 못 한다
+reset role;
+select public.take_ask_quota('00000000-0000-0000-0000-00000000000d', 2, 0) = 1 as ask_first;
+select public.take_ask_quota('00000000-0000-0000-0000-00000000000d', 2, 0) = 2 as ask_second;
+select public.take_ask_quota('00000000-0000-0000-0000-00000000000d', 2, 0) = -1 as ask_limit;
+select public.take_ask_quota('00000000-0000-0000-0000-00000000000e', 5, 0) = 1 as ask_other_user_separate;
+select public.take_ask_quota('00000000-0000-0000-0000-00000000000e', 5, 60) = -2 as ask_too_fast;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select not has_function_privilege('authenticated', 'public.take_ask_quota(uuid,int,int)', 'execute') as ask_fn_locked;
+select not has_table_privilege('authenticated', 'public.ask_usage', 'select') as ask_table_locked;
 select 'ALL OK' as result;
 -- 위 select 결과 중 f(false)가 하나라도 있으면 실패다. tests/run.sh가 이를 검사한다.

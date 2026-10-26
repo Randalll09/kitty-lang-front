@@ -2,8 +2,9 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
-import { charCount, parse, sentenceAt, tokenKey, tokenReading, type Piece, type Token } from '../lib/markup'
+import { charCount, parse, plain, readingRange, sentenceAt, tokenKey, tokenReading, type Piece, type Token } from '../lib/markup'
 import { FONT_SIZES, finishArticle, saveWord, removeWord, setLastArticle, update } from '../lib/store'
+import { useUnderline } from '../lib/underline'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 
@@ -23,6 +24,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const [pct, setPct] = useState(0)
   const [para, setPara] = useState(1)
   const [active, setActive] = useState<Token | null>(null)
+  const [activeAt, setActiveAt] = useState<{ para: number; s: number; e: number } | null>(null)
   const [toast, setToast] = useState('')
   const press = useRef<{ timer: number; x: number; y: number } | null>(null)
   const longPressed = useRef(false)
@@ -62,6 +64,18 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
     setToast(t)
     setTimeout(() => setToast(''), 1600)
   }
+
+  const ul = useUnderline({
+    articleId: article.id,
+    title: plain(article.title),
+    lang: 'ja',
+    texts: article.paragraphs.map(plain),
+    reading: (para, s, e) => readingRange(article.paragraphs[para], s, e),
+    scroller,
+    state,
+    flash,
+  })
+  const activeMark = active && activeAt ? ul.markFor(activeAt.para, activeAt.s, activeAt.e) : undefined
 
   const toggleBookmark = () => {
     update((s) => ({ ...s, bookmarks: bookmarked ? s.bookmarks.filter((b) => b !== article.id) : [...s.bookmarks, article.id] }))
@@ -129,7 +143,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
         <span>문단 {para}/{article.paragraphs.length}</span>
       </div>
 
-      <div ref={scroller} className={`body rscroll ${settings.furigana ? '' : 'nofuri'} ${active ? 'hasPop' : ''}`} onScroll={measure}>
+      <div ref={scroller} className={`body rscroll ${settings.furigana ? '' : 'nofuri'} ${active && !ul.pen ? 'hasPop' : ''}`} onScroll={measure}>
         <div className="ahead">
           <div className="meta"><span className="tag">{article.topic}</span><span className="tag">{article.level}</span></div>
           <h1>{parse(article.title).map((p, i) => ('text' in p ? <Fragment key={i}>{p.text}</Fragment> : <Fragment key={i}><Ruby t={p.token} />{p.token.tail}</Fragment>))}</h1>
@@ -139,33 +153,45 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
             <span>{pct > 0.97 ? '끝까지 읽었어요' : `약 ${minutesLeft}분 남음`}</span>
           </div>
         </div>
-        <p className="hint">단어를 누르면 뜻이 나와요. 꾹 누르면 바로 단어장에 저장돼요.</p>
-        <div className="rpages" style={{ fontSize: fs }}>
+        <p className="hint">단어를 누르면 뜻이 나와요. 꾹 누르면 바로 단어장에 저장돼요. 밑줄 펜을 켜면 글을 끌어서 밑줄을 그을 수 있어요.</p>
+        <div className={`rpages ${ul.pen ? 'pen' : ''}`} style={{ fontSize: fs }} {...ul.bind}>
           {article.paragraphs.map((para, i) => (
             <p key={i} className="rp">
-              {parse(para).map((p, j, pieces) =>
-                'text' in p ? (
-                  <Fragment key={j}>{p.text}</Fragment>
-                ) : (
-                  <button
-                    key={j}
-                    type="button"
-                    className={`w ${active && tokenKey(active) === tokenKey(p.token) ? 'on' : ''} ${savedKeys[tokenKey(p.token)] ? 'saved' : ''}`}
-                    onPointerDown={(e) => startPress(e, p.token, pieces, j)}
-                    onPointerMove={movePress}
-                    onPointerUp={cancelPress}
-                    onPointerCancel={cancelPress}
-                    onPointerLeave={cancelPress}
-                    onContextMenu={(e) => e.preventDefault()}
-                    onClick={() => {
-                      if (longPressed.current) return void (longPressed.current = false)
-                      setActive(active && tokenKey(active) === tokenKey(p.token) ? null : p.token)
-                    }}
-                  >
-                    <Ruby t={p.token} />{p.token.tail}
-                  </button>
-                ),
-              )}
+              {(() => {
+                let off = 0
+                return parse(para).map((p, j, pieces) => {
+                  if ('text' in p) {
+                    const start = off
+                    off += p.text.length
+                    return <Fragment key={j}>{ul.chars(p.text, start, i)}</Fragment>
+                  }
+                  const s = off
+                  const e = off + p.token.surface.length + p.token.tail.length
+                  off = e
+                  return (
+                    <button
+                      key={j}
+                      type="button"
+                      className={`w ${active && tokenKey(active) === tokenKey(p.token) ? 'on' : ''} ${savedKeys[tokenKey(p.token)] ? 'saved' : ''} ${ul.cls(i, s, e)}`}
+                      {...ul.attrs(i, s, e)}
+                      onPointerDown={ul.pen ? undefined : (ev) => startPress(ev, p.token, pieces, j)}
+                      onPointerMove={ul.pen ? undefined : movePress}
+                      onPointerUp={ul.pen ? undefined : cancelPress}
+                      onPointerCancel={ul.pen ? undefined : cancelPress}
+                      onPointerLeave={ul.pen ? undefined : cancelPress}
+                      onContextMenu={(ev) => ev.preventDefault()}
+                      onClick={() => {
+                        if (ul.pen) return
+                        if (longPressed.current) return void (longPressed.current = false)
+                        setActiveAt({ para: i, s, e })
+                        setActive(active && tokenKey(active) === tokenKey(p.token) ? null : p.token)
+                      }}
+                    >
+                      <Ruby t={p.token} />{p.token.tail}{ul.badge(i, e)}
+                    </button>
+                  )
+                })
+              })()}
             </p>
           ))}
         </div>
@@ -184,6 +210,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
       </div>
 
       <div className="tools">
+        {ul.penButton}
         <button
           className="sw"
           type="button"
@@ -199,7 +226,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
         </div>
       </div>
 
-      {active && (
+      {active && !ul.pen && (
         <div className="pop">
           <div className="hd">
             <span className="jp">{tokenKey(active)}</span>
@@ -210,10 +237,14 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
             <button className={`btn ${activeSaved ? 'peach' : 'mint'}`} type="button" onClick={() => toggleWord(active)}>
               {activeSaved ? '저장됨' : '단어 저장'}
             </button>
+            {activeMark && (
+              <button className="btn ask" type="button" onClick={() => { setActive(null); ul.open(activeMark.id) }}>밑줄 질문</button>
+            )}
             <button className="btn ghost sq" type="button" onClick={() => setActive(null)}>닫기</button>
           </div>
         </div>
       )}
+      {ul.sheet}
       <div className={`toast ${toast ? 'show' : ''}`} role="status">{toast}</div>
     </>
   )

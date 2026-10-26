@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { addDays, today } from './dates'
-import type { AppState, DayLog, Lang, LangRecord, TaskId, VocabEntry } from '../types'
+import type { AppState, ChatMsg, DayLog, Lang, LangRecord, Mark, TaskId, VocabEntry } from '../types'
 
 const KEY = 'kitty-lang-v1'
 
@@ -16,6 +16,8 @@ const initial = (): AppState => ({
   words: {},
   progress: {},
   bookmarks: [],
+  marks: {},
+  chats: {},
   snacks: 0,
   ...emptyRecord(),
   en: emptyRecord(),
@@ -186,3 +188,20 @@ export const dueWords = (s: AppState) =>
   wordsOfLang(s)
     .filter((w) => w.due <= today())
     .sort((a, b) => a.box - b.box || a.addedAt - b.addedAt)
+
+/* ---------- 밑줄과 질문 대화 ---------- */
+
+const MAX_CHAT = 40
+
+export const addMark = (s: AppState, articleId: string, m: Mark): AppState => ({ ...s, marks: { ...s.marks, [articleId]: [...(s.marks[articleId] ?? []), m] } })
+
+/** 밑줄을 지우면 그 밑줄의 대화도 함께 지운다. */
+export function removeMark(s: AppState, articleId: string, markId: string): AppState {
+  const { [markId]: _, ...chats } = s.chats
+  return { ...s, marks: { ...s.marks, [articleId]: (s.marks[articleId] ?? []).filter((m) => m.id !== markId) }, chats }
+}
+
+export const appendChat = (s: AppState, markId: string, msg: ChatMsg): AppState => ({
+  ...s,
+  chats: { ...s.chats, [markId]: [...(s.chats[markId] ?? []), msg].slice(-MAX_CHAT) },
+})

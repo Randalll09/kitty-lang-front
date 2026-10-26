@@ -51,6 +51,22 @@ export interface DayLog {
   quizTotal?: number
 }
 
+/** 읽기 화면에서 펜으로 그은 밑줄. start/end는 문단 글자(plain) 기준 위치. */
+export interface Mark {
+  id: string
+  para: number
+  start: number
+  end: number
+  text: string
+  at: number
+}
+
+export interface ChatMsg {
+  role: 'user' | 'assistant'
+  content: string
+  at: number
+}
+
 export interface Settings {
   furigana: boolean
   fontIndex: number
@@ -75,6 +91,10 @@ export interface AppState extends LangRecord {
   /** 글 id → 읽기 진행(0~100) */
   progress: Record<string, number>
   bookmarks: string[]
+  /** 글 id → 밑줄 */
+  marks: Record<string, Mark[]>
+  /** 밑줄 id → Claude와 나눈 대화 */
+  chats: Record<string, ChatMsg[]>
   snacks: number
   /** 영어 기록 */
   en: LangRecord
