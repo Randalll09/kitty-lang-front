@@ -1,7 +1,8 @@
 import type { Article } from '../types'
+import { ARTICLES_JA } from './articles.ja'
 
 // 본문 표기: {표기|읽기|뜻|뒤에 붙는 가나}. 읽기가 필요 없는 가나 단어는 읽기를 비워 둔다.
-export const ARTICLES: Article[] = [
+const SAMPLES: Article[] = [
   {
     id: 'kyoto',
     title: '{京都|きょうと|교토}の{秋|あき|가을}、{紅葉|こうよう|단풍}が{見|み|보기 좋은 시기|ごろ}です',
@@ -112,3 +113,5 @@ export const ARTICLES: Article[] = [
     ],
   },
 ]
+
+export const ARTICLES: Article[] = [...SAMPLES, ...ARTICLES_JA]
