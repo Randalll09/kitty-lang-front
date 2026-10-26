@@ -3,7 +3,7 @@ import { Cat } from '../components/Cat'
 import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
 import { charCount, parse, tokenKey, tokenReading, type Token } from '../lib/markup'
-import { FONT_SIZES, completeTask, saveWord, removeWord, update } from '../lib/store'
+import { FONT_SIZES, addToday, completeTask, saveWord, removeWord, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 
@@ -79,7 +79,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const finish = () => {
     if (finished) return go({ name: 'quiz', id: article.id })
     maxPct.current = 100
-    update((s) => completeTask({ ...s, progress: { ...s.progress, [article.id]: 100 }, articlesRead: s.articlesRead + 1 }, 'read'))
+    update((s) => completeTask(addToday({ ...s, progress: { ...s.progress, [article.id]: 100 }, articlesRead: s.articlesRead + 1 }, { articles: 1 }), 'read'))
   }
 
   const fs = FONT_SIZES[settings.fontIndex]

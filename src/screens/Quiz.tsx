@@ -4,7 +4,7 @@ import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
 import { buildQuiz } from '../lib/quiz'
 import { wordsOf } from '../lib/markup'
-import { completeTask, saveWord, update } from '../lib/store'
+import { addToday, completeTask, saveWord, update } from '../lib/store'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
 import type { GlossWord } from '../lib/markup'
@@ -28,7 +28,12 @@ export function Quiz({ state, id, go }: { state: AppState; id: string; go: (s: S
   useEffect(() => {
     if (!over || reported.current) return
     reported.current = true
-    update((s) => completeTask({ ...s, quizCorrect: s.quizCorrect + score, quizTotal: s.quizTotal + questions.length }, 'quiz'))
+    update((s) =>
+      completeTask(
+        addToday({ ...s, quizCorrect: s.quizCorrect + score, quizTotal: s.quizTotal + questions.length }, { quizCorrect: score, quizTotal: questions.length }),
+        'quiz',
+      ),
+    )
   }, [over, score, questions.length])
 
   useEffect(() => {

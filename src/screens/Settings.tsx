@@ -1,9 +1,10 @@
 import { FONT_SIZES, resetAll, update } from '../lib/store'
+import type { Screen } from '../App'
 import type { AppState, Theme } from '../types'
 
 const THEMES: [Theme, string][] = [['system', '기기 설정'], ['light', '밝게'], ['dark', '어둡게']]
 
-export function Settings({ state }: { state: AppState }) {
+export function Settings({ state, go }: { state: AppState; go: (s: Screen) => void }) {
   const { settings } = state
   const set = (patch: Partial<typeof settings>) => update((s) => ({ ...s, settings: { ...s.settings, ...patch } }))
 
@@ -48,7 +49,8 @@ export function Settings({ state }: { state: AppState }) {
 
       <div className="card set">
         <h2>친구와 같이 하기</h2>
-        <p className="soft small">친구와 숫자 기록을 나누는 기능은 서버를 연결하는 다음 단계에서 열려요. 지금은 모든 기록이 이 폰 안에만 저장돼요.</p>
+        <p className="soft small">로그인과 친구 연결, 응원, 공동 목표는 ‘같이’ 탭에 있어요. 기록은 이 폰에 먼저 저장되고, 인터넷이 되면 숫자만 서버와 맞춰요.</p>
+        <button className="btn ghost block" type="button" onClick={() => go({ name: 'together' })}>같이 탭 열기</button>
       </div>
 
       <div className="card set">

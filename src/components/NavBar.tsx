@@ -1,4 +1,5 @@
 import { Icon } from './Icon'
+import { unreadCheers, useSocial } from '../lib/social'
 import type { Screen } from '../App'
 
 const ITEMS = [
@@ -6,10 +7,12 @@ const ITEMS = [
   ['pick', '글', 'list'],
   ['quiz', '퀴즈', 'quiz'],
   ['vocab', '단어장', 'cards'],
-  ['settings', '설정', 'gear'],
+  ['cal', '기록', 'cal'],
+  ['together', '같이', 'paw'],
 ] as const
 
 export function NavBar({ active, go }: { active: Screen['name']; go: (s: Screen) => void }) {
+  const unread = unreadCheers(useSocial())
   return (
     <nav className="nav" aria-label="메뉴">
       {ITEMS.map(([name, label, icon]) => (
@@ -22,6 +25,7 @@ export function NavBar({ active, go }: { active: Screen['name']; go: (s: Screen)
         >
           <Icon name={icon} />
           {label}
+          {name === 'together' && unread > 0 && <span className="dot" aria-label={`새 응원 ${unread}개`} />}
         </button>
       ))}
     </nav>
