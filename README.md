@@ -14,6 +14,14 @@
 저장은 먼저 `localStorage`(키 `kitty-lang-v1`)에 하고, 로그인하면 숫자만 Supabase와 맞춰요. 인터넷이 없어도 그대로 쓰고, 연결되면 알아서 올려요.
 영어 글과 AI 문장 설명도 2단계 이후예요.
 
+## 저장소 구조
+
+프론트와 백엔드를 한 저장소에서 관리해요. (백엔드는 예전 `kitty-lang-back` 저장소에서 옮겨 왔어요.)
+
+- `src/`, `android/`, `public/`: 앱(Vite + React + Capacitor)
+- `supabase/migrations/`: DB 스키마와 RLS (서버를 따로 두지 않고 Supabase가 그대로 백엔드가 돼요)
+- `supabase/tests/`: 마이그레이션과 RLS 검증(`bash supabase/tests/run.sh`, Postgres 16 필요)
+
 ## 친구와 같이 하기 (Supabase)
 
 - 홈: 독해 완료 기준으로 하루를 판정(30분을 못 채워도 돼요)
@@ -22,7 +30,7 @@
 - 서버에 올라가는 것은 하루별 숫자(학습 시간, 읽은 글 수, 복습 단어 수, 퀴즈 맞힌 수/푼 수)뿐이에요.
 
 ### 설정
-1. [kitty-lang-back](https://github.com/randalll09/kitty-lang-back)의 `supabase/migrations/*.sql`을 파일 순서대로 SQL Editor에서 실행해요. (파일 이름이 아니라 내용을 붙여 넣어요.)
+1. 이 저장소의 `supabase/migrations/*.sql`을 파일 이름 순서대로 SQL Editor에서 실행해요. (파일 이름이 아니라 내용을 붙여 넣어요.) 자세한 내용은 [supabase/README.md](supabase/README.md)에 있어요.
 2. Supabase 대시보드 → Authentication → Providers → Email 에서 **Confirm email** 을 꺼요. 메일 확인이 켜져 있으면 가입이 막혀요.
 3. `.env.example` 을 `.env` 로 복사하고 Project URL 과 anon key 만 넣어요. service_role key 와 비밀번호는 넣지 않아요.
 4. 두 사람이 모두 가입하면 자동으로 이어져요. 그 뒤에는 Authentication 설정에서 신규 가입을 꺼 두는 걸 권해요.
