@@ -35,6 +35,13 @@
         </provider>
     </application>
 
+    <!-- Android 11 이상에서 기기의 읽어주기(TTS) 엔진을 찾으려면 필요하다 -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+    </queries>
+
     <!-- Permissions -->
 
     <uses-permission android:name="android.permission.INTERNET" />

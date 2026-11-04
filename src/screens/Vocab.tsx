@@ -1,14 +1,39 @@
 import { useEffect, useRef, useState } from 'react'
 import { Cat } from '../components/Cat'
+import { Icon } from '../components/Icon'
 import { completeTask, dueWords, gradeWord, removeWord, setMeaning, update, wordsOfLang } from '../lib/store'
-import type { AppState } from '../types'
+import { speak, stopSpeech, useSpeaking } from '../lib/tts'
+import type { AppState, VocabEntry } from '../types'
+import { wordLang } from '../lib/store'
 
 const ST = ['새 단어', '익히는 중', '외웠어요']
 const FILTERS = ['전체', ...ST]
 
+/** 단어 읽어주기 버튼. 읽는 동안 다시 누르면 멈춘다. */
+function SayBtn({ w, className = '' }: { w: VocabEntry; className?: string }) {
+  const on = useSpeaking() === `word:${w.key}`
+  return (
+    <button
+      className={`say-btn ${className}`}
+      type="button"
+      aria-pressed={on}
+      aria-label={`${w.key} ${on ? '읽기 멈추기' : '읽어주기'}`}
+      onClick={(e) => {
+        e.stopPropagation()
+        // 읽는 말은 표기 대신 읽는 법(후리가나)이 있으면 그것으로, 아니면 표기 그대로.
+        void speak(`word:${w.key}`, [w.key], wordLang(w), 0.8)
+      }}
+    >
+      <Icon name={on ? 'stop' : 'speaker'} />
+    </button>
+  )
+}
+
 export function Vocab({ state, initialTab }: { state: AppState; initialTab?: 'list' | 'review' }) {
   const [tab, setTab] = useState<'list' | 'review'>(initialTab ?? 'review')
   const count = wordsOfLang(state).length
+
+  useEffect(() => () => void stopSpeech(), [tab])
 
   useEffect(() => {
     if (tab === 'list') update((s) => completeTask(s, 'words'))
@@ -62,6 +87,7 @@ function List({ state }: { state: AppState }) {
                 />
               )}
             </div>
+            <SayBtn w={w} />
             <span className={`st st${w.box}`}>{ST[w.box]}</span>
             <button className="del" type="button" aria-label={`${w.key} 삭제`} onClick={() => update((s) => removeWord(s, w.key))}>×</button>
           </div>
@@ -162,6 +188,7 @@ function Review({ state }: { state: AppState }) {
           <span className="tapnote">눌러서 뜻 보기</span>
         )}
       </button>
+      <div className="say-row"><SayBtn w={w} className="big" /></div>
       <div className="rbtns">
         <button className="btn ghost" type="button" disabled={eating} onClick={() => grade(false)}>다시 볼래요</button>
         <button className="btn mint" type="button" disabled={eating} onClick={() => grade(true)}>알아요</button>

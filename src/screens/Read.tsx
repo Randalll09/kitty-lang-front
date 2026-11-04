@@ -4,6 +4,7 @@ import { Icon } from '../components/Icon'
 import { ARTICLES } from '../data/articles'
 import { charCount, parse, plain, readingRange, sentenceAt, tokenKey, tokenReading, type Piece, type Token } from '../lib/markup'
 import { FONT_SIZES, finishArticle, saveWord, removeWord, setLastArticle, update } from '../lib/store'
+import { speak, stopSpeech, useSpeaking } from '../lib/tts'
 import { useUnderline } from '../lib/underline'
 import type { Screen } from '../App'
 import type { AppState } from '../types'
@@ -26,6 +27,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   const [active, setActive] = useState<Token | null>(null)
   const [activeAt, setActiveAt] = useState<{ para: number; s: number; e: number } | null>(null)
   const [toast, setToast] = useState('')
+  const speaking = useSpeaking() === `read:${article.id}`
   const press = useRef<{ timer: number; x: number; y: number } | null>(null)
   const longPressed = useRef(false)
   const finished = (state.progress[article.id] ?? 0) >= 100
@@ -34,6 +36,9 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
   useEffect(() => {
     update((s) => setLastArticle(s, article.id))
   }, [article.id])
+
+  // 화면을 떠나면 읽어주기도 멈춘다.
+  useEffect(() => () => void stopSpeech(), [article.id])
 
   // 떠날 때 가장 멀리 읽은 위치를 저장한다. 다 읽었어요를 누르면 이미 100이다.
   useEffect(
@@ -76,6 +81,10 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
     flash,
   })
   const activeMark = active && activeAt ? ul.markFor(activeAt.para, activeAt.s, activeAt.e) : undefined
+
+  const toggleListen = async () => {
+    if (!(await speak(`read:${article.id}`, article.paragraphs.map(plain), 'ja'))) flash('읽어주기를 쓸 수 없어요. 기기의 음성 설정을 확인해 주세요')
+  }
 
   const toggleBookmark = () => {
     update((s) => ({ ...s, bookmarks: bookmarked ? s.bookmarks.filter((b) => b !== article.id) : [...s.bookmarks, article.id] }))
@@ -211,6 +220,9 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
 
       <div className="tools">
         {ul.penButton}
+        <button className="sw listen" type="button" aria-pressed={speaking} onClick={toggleListen}>
+          <span className="ico"><Icon name={speaking ? 'stop' : 'speaker'} /></span>{speaking ? '멈추기' : '읽어주기'}
+        </button>
         <button
           className="sw"
           type="button"

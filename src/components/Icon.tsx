@@ -47,6 +47,13 @@ const PATHS: Record<string, React.ReactNode> = {
       <path d="M14.5 6.5l3 3" />
     </>
   ),
+  speaker: (
+    <>
+      <path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" />
+      <path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />
+    </>
+  ),
+  stop: <rect x="6.5" y="6.5" width="11" height="11" rx="2.5" />,
   back: <path d="M15 5l-7 7 7 7" />,
   check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
 }

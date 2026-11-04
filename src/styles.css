@@ -363,3 +363,17 @@ rt { font-size: 0.5em; color: var(--ink-soft); letter-spacing: -0.04em; font-wei
 @keyframes dimIn { from { opacity: 0; } }
 @keyframes dot { 0%, 80%, 100% { opacity: 0.25; } 40% { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .sheet, .dim, .dots i { animation: none; } }
+
+/* 읽어주기 */
+.sw.listen { padding: 2px 12px 2px 3px; }
+.sw.listen .ico { width: 30px; height: 26px; border: 2px solid var(--line); border-radius: 999px; background: var(--paper); display: grid; place-items: center; }
+.sw.listen .ico .ic { width: 15px; height: 15px; }
+.sw.listen[aria-pressed='true'] .ico { background: var(--mint-deep); }
+.sw.listen[aria-pressed='true'] .ico .ic { fill: var(--line); }
+.say-btn { width: 34px; height: 34px; flex: none; border: 2.5px solid var(--line); border-radius: 50%; background: var(--butter); display: grid; place-items: center; cursor: pointer; padding: 0; box-shadow: 0 2px 0 var(--shadow); }
+.say-btn .ic { width: 17px; height: 17px; }
+.say-btn[aria-pressed='true'] { background: var(--mint-deep); transform: translateY(1px); box-shadow: none; }
+.say-btn[aria-pressed='true'] .ic { fill: var(--line); }
+.say-btn.big { width: 44px; height: 44px; }
+.say-btn.big .ic { width: 22px; height: 22px; }
+.say-row { display: flex; justify-content: center; margin: 2px 0 4px; }
