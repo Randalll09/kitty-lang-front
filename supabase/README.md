@@ -56,3 +56,17 @@ Supabase 프로젝트의 SQL Editor에 `migrations/*.sql`을 **파일 이름 순
 
 ## 아직 없는 것
 - 푸시 알림 전송(응원은 저장만 하며 앱이 열릴 때 가져와요)
+
+## 읽어주기 (Edge Function `tts`)
+독해 화면과 단어장의 읽어주기 버튼이 쓰는 클라우드 음성이에요. 앱이 Google 에 직접 가지 않고, `functions/tts` 가 서버에서 키를 가지고 대신 호출해요. 서버가 안 되거나 오프라인이거나 하루 한도를 넘으면 앱이 알아서 기기 내장 TTS로 읽어요.
+
+- 음성: Google Cloud Text-to-Speech Neural2 (`ja-JP-Neural2-B`, `en-US-Neural2-F`). 월 100만 자까지 무료예요. `TTS_VOICE_JA`, `TTS_VOICE_EN` 으로 바꿀 수 있어요.
+- 남용 방지: 한 사람당 하루 15,000자(`TTS_DAILY_CHARS`)를 `take_tts_quota` 가 세요. 두 사람이 한 달 다 써도 90만 자라서 무료 한도 안이에요. 글 내용은 저장하지 않고 글자 수만 저장해요.
+- 한 번 받은 소리는 앱이 기기에 저장해서 같은 문장은 다시 요청하지 않아요.
+
+### 설정
+1. Google Cloud 에서 프로젝트를 만들고 Cloud Text-to-Speech API 를 켜요. 결제 수단 등록이 필요하니 **예산 알림**(예: 1달러)을 꼭 걸어 두세요.
+2. API 키를 만들고 "API 제한"을 Cloud Text-to-Speech API 로만 좁혀요.
+3. SQL Editor 에서 `migrations/20261104000000_tts_quota.sql` 을 실행해요.
+4. 키를 Supabase secrets 에 넣어요: `supabase secrets set GOOGLE_TTS_API_KEY=...` (대시보드: Edge Functions → Secrets). 앱과 저장소에는 넣지 않아요.
+5. 함수를 배포해요: `supabase functions deploy tts --project-ref <프로젝트 ref>`.
