@@ -122,5 +122,17 @@ set role authenticated;
 select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
 select not has_function_privilege('authenticated', 'public.take_ask_quota(uuid,int,int)', 'execute') as ask_fn_locked;
 select not has_table_privilege('authenticated', 'public.ask_usage', 'select') as ask_table_locked;
+
+-- 읽어주기 글자 수 제한: 한도 안에서는 합계를 돌려주고, 넘기면 -1(더하지 않음), 사용자별로 따로 센다
+reset role;
+select public.take_tts_quota('00000000-0000-0000-0000-00000000000d', 60, 100) = 60 as tts_first;
+select public.take_tts_quota('00000000-0000-0000-0000-00000000000d', 40, 100) = 100 as tts_exact_limit;
+select public.take_tts_quota('00000000-0000-0000-0000-00000000000d', 1, 100) = -1 as tts_over_limit;
+select public.take_tts_quota('00000000-0000-0000-0000-00000000000e', 60, 100) = 60 as tts_other_user_separate;
+select public.take_tts_quota('00000000-0000-0000-0000-00000000000e', 101, 100) = -1 as tts_too_long;
+set role authenticated;
+select pg_temp.as_user('00000000-0000-0000-0000-00000000000d');
+select not has_function_privilege('authenticated', 'public.take_tts_quota(uuid,int,int)', 'execute') as tts_fn_locked;
+select not has_table_privilege('authenticated', 'public.tts_usage', 'select') as tts_table_locked;
 select 'ALL OK' as result;
 -- 위 select 결과 중 f(false)가 하나라도 있으면 실패다. tests/run.sh가 이를 검사한다.
