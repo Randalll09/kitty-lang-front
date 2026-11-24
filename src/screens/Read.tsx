@@ -249,6 +249,7 @@ export function Read({ state, id, go, back }: { state: AppState; id: string; go:
             <button className={`btn ${activeSaved ? 'peach' : 'mint'}`} type="button" onClick={() => toggleWord(active)}>
               {activeSaved ? '저장됨' : '단어 저장'}
             </button>
+            <button className="btn ask" type="button" onClick={() => { if (activeAt) { setActive(null); ul.explain(activeAt.para, activeAt.s) } }}>문장 설명</button>
             {activeMark && (
               <button className="btn ask" type="button" onClick={() => { setActive(null); ul.open(activeMark.id) }}>밑줄 질문</button>
             )}

@@ -35,6 +35,23 @@ function hit(x: number, y: number) {
   return null
 }
 
+/** plain 글 text 에서 at 위치가 들어 있는 한 문장의 [s, e). 일본어(。！？)와 영어(. ! ?) 모두 다룬다. */
+export function sentenceSpan(text: string, at: number) {
+  const end = /[。！？]+[」』）)]*|[.!?]+["')\]]*(?=\s|$)/g
+  let s = 0
+  for (let m = end.exec(text); m; m = end.exec(text)) {
+    const stop = m.index + m[0].length
+    if (stop > at) return trimSpan(text, s, stop)
+    s = stop
+  }
+  return trimSpan(text, s, text.length)
+}
+function trimSpan(text: string, s: number, e: number) {
+  while (s < e && /\s/.test(text[s])) s++
+  while (e > s && /\s/.test(text[e - 1])) e--
+  return { s, e }
+}
+
 const overlaps = (m: Pick<Mark, 'para' | 'start' | 'end'>, para: number, s: number, e: number) => m.para === para && s < m.end && e > m.start
 
 /** 밑줄(펜) 모드, 밑줄 저장, 아래에서 올라오는 질문 패널을 한 번에 다룬다. 일본어와 영어 읽기 화면이 같이 쓴다. */
@@ -44,6 +61,8 @@ export function useUnderline(o: Options) {
   const [pen, setPenState] = useState(false)
   const [drag, setDrag] = useState<Range | null>(null)
   const [sheetId, setSheetId] = useState<string | null>(null)
+  /** 문장 설명으로 연 패널은 열리자마자 설명을 요청한다. */
+  const [autoExplain, setAutoExplain] = useState(false)
   const dragRef = useRef<{ from: Range; x: number; y: number; moved: boolean; last: { x: number; y: number }; raf: number } | null>(null)
   const pushed = useRef(false)
 
@@ -63,6 +82,7 @@ export function useUnderline(o: Options) {
     }
     setSheetId(id)
   }, [])
+  const closeSheet = () => setAutoExplain(false)
   const close = useCallback(() => {
     if (pushed.current) history.back()
     else setSheetId(null)
@@ -70,13 +90,27 @@ export function useUnderline(o: Options) {
 
   const markAt = (para: number, s: number, e: number) => [...marks].reverse().find((m) => overlaps(m, para, s, e))
 
-  const create = (r: Range) => {
+  const create = (r: Range, quiet = false) => {
     const text = o.texts[r.para]?.slice(r.s, r.e).trim()
-    if (!text) return
+    if (!text) return undefined
     const m: Mark = { id: `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`, para: r.para, start: r.s, end: r.e, text, at: Date.now() }
     update((s) => addMark(s, o.articleId, m))
+    if (quiet) return m.id
     navigator.vibrate?.(20)
     o.flash('밑줄을 그었어요. 눌러서 물어봐요')
+    return m.id
+  }
+
+  /** 단어가 든 문장을 통째로 밑줄 쳐서 "문장 설명" 패널을 연다. 같은 문장을 이미 설명받았으면 저장된 설명을 그대로 보여 준다(호출 없음). */
+  const explain = (para: number, at: number) => {
+    const text = o.texts[para] ?? ''
+    const { s, e } = sentenceSpan(text, at)
+    if (e <= s) return
+    const same = marks.find((m) => m.para === para && m.start === s && m.end === e)
+    const id = same?.id ?? create({ para, s, e }, true)
+    if (!id) return
+    setAutoExplain(true)
+    open(id)
   }
 
   /** 지금 손가락 위치까지의 구간. 같은 문단 안에서만 이어지고, 다른 문단으로 넘어가면 문단 끝까지 잡는다. */
@@ -206,9 +240,13 @@ export function useUnderline(o: Options) {
       paragraph={o.texts[sheetMark.para] ?? ''}
       reading={o.reading}
       messages={state.chats[sheetMark.id] ?? []}
-      onClose={close}
+      autoExplain={autoExplain}
+      onClose={() => {
+        closeSheet()
+        close()
+      }}
     />
   ) : null
 
-  return { pen, setPen, penButton, sheet, bind, attrs, cls, chars, badge, markFor, open }
+  return { pen, setPen, penButton, sheet, bind, attrs, cls, chars, badge, markFor, open, explain }
 }

@@ -250,6 +250,7 @@ export function ReadEn({ state, id, back, go }: { state: AppState; id: string; b
             >
               {activeSaved ? '저장됨' : '단어 저장'}
             </button>
+            <button className="btn ask" type="button" onClick={() => { setActive(null); ul.explain(active.para, active.s) }}>문장 설명</button>
             {activeMark && (
               <button className="btn ask" type="button" onClick={() => { setActive(null); ul.open(activeMark.id) }}>밑줄 질문</button>
             )}
