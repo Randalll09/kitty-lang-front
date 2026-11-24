@@ -11,12 +11,17 @@ interface Props {
   paragraph: string
   reading?: (para: number, s: number, e: number) => string
   messages: ChatMsg[]
+  /** 문장 설명으로 열렸고 아직 대화가 없으면 열자마자 뜻·문법 설명을 요청한다. */
+  autoExplain?: boolean
   onClose: () => void
 }
 
+/** 문장 설명 요청 문구. 서버는 이 첫 질문을 받으면 뜻·문법 순서의 설명으로 답한다. */
+const EXPLAIN_Q = '이 문장의 뜻과 문법을 설명해줘'
+
 const QUICK: Record<Lang, string[]> = {
-  ja: ['이 문장 뜻을 쉽게 풀어줘', '단어를 하나씩 설명해줘', '비슷한 예문을 보여줘'],
-  en: ['이 문장 뜻을 쉽게 풀어줘', '단어를 하나씩 설명해줘', '비슷한 예문을 보여줘'],
+  ja: [EXPLAIN_Q, '단어를 하나씩 설명해줘', '비슷한 예문을 보여줘'],
+  en: [EXPLAIN_Q, '단어를 하나씩 설명해줘', '비슷한 예문을 보여줘'],
 }
 
 /** 답변 속 **굵게**만 살리고 나머지는 글 그대로 보여 준다. */
@@ -35,7 +40,7 @@ function Answer({ text }: { text: string }) {
 const catSrc = `${import.meta.env.BASE_URL}cat/sit.webp`
 
 /** 밑줄을 누르면 아래에서 올라오는 질문 채팅 패널. 선택한 문장이 맥락으로 붙은 채 Claude에게 물어본다. */
-export function AskSheet({ articleId, title, lang, mark, paragraph, reading, messages, onClose }: Props) {
+export function AskSheet({ articleId, title, lang, mark, paragraph, reading, messages, autoExplain, onClose }: Props) {
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
   const [err, setErr] = useState<Extract<AskResult, { ok: false }> | null>(null)
@@ -67,7 +72,8 @@ export function AskSheet({ articleId, title, lang, mark, paragraph, reading, mes
     // 서버는 사용자 질문으로 시작하는 최근 대화만 받는다.
     const recent = history.slice(-10)
     const first = recent.findIndex((m) => m.role === 'user')
-    const res = await askClaude(ctx, recent.slice(Math.max(0, first)).map(({ role, content }) => ({ role, content })))
+    const explain = recent.length === 1 && recent[0].content === EXPLAIN_Q
+    const res = await askClaude(explain ? { ...ctx, mode: 'explain' } : ctx, recent.slice(Math.max(0, first)).map(({ role, content }) => ({ role, content })))
     setBusy(false)
     if (res.ok) {
       setRemaining(res.remaining)
@@ -84,6 +90,15 @@ export function AskSheet({ articleId, title, lang, mark, paragraph, reading, mes
     void ask([...messages, msg])
   }
 
+  // 문장 설명으로 열렸고 저장된 설명이 없을 때만 한 번 요청한다. (StrictMode 중복 호출 방지)
+  const auto = useRef(false)
+  useEffect(() => {
+    if (!autoExplain || messages.length > 0 || auto.current) return
+    auto.current = true
+    send(EXPLAIN_Q)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const lastIsQuestion = messages.length > 0 && messages[messages.length - 1].role === 'user'
 
   const del = () => {
@@ -95,11 +110,11 @@ export function AskSheet({ articleId, title, lang, mark, paragraph, reading, mes
   return (
     <>
       <div className="dim" onClick={onClose} />
-      <section className="sheet" role="dialog" aria-modal="true" aria-label="밑줄 질문">
+      <section className="sheet" role="dialog" aria-modal="true" aria-label="문장 설명과 질문">
         <div className="grab" />
         <div className="shead">
           <img className="ava" src={catSrc} alt="" aria-hidden="true" draggable={false} />
-          <div className="t">고양이 선생님께 물어보기</div>
+          <div className="t">고양이 선생님 설명</div>
           <button className="iconbtn" type="button" aria-label="닫기" onClick={onClose}>✕</button>
         </div>
         <blockquote className="quote" lang={lang}>

@@ -3,6 +3,8 @@ import { supabase } from './supabase'
 import type { Lang } from '../types'
 
 export interface AskContext {
+  /** 'explain': 문장 설명(뜻·문법을 정해진 순서로). 없으면 자유 질문. */
+  mode?: 'explain'
   lang: Lang
   title: string
   selection: string

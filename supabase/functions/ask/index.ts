@@ -20,6 +20,8 @@ const reply = (status: number, body: Record<string, unknown>) =>
 
 type Msg = { role: 'user' | 'assistant'; content: string }
 interface Body {
+  /** 'explain' 이면 밑줄 친 문장을 뜻·문법 순서로 한 번에 설명한다(문장 설명). 없으면 자유 질문. */
+  mode: 'explain' | 'chat'
   lang: 'ja' | 'en'
   title: string
   selection: string
@@ -51,7 +53,11 @@ function parse(raw: unknown): Body | null {
     messages.push({ role, content })
   }
   if (messages[0].role !== 'user' || messages[messages.length - 1].role !== 'user') return null
-  return { lang: b.lang, title, selection, selectionReading, paragraph, paragraphReading, messages }
+  if (b.mode !== undefined && b.mode !== 'explain' && b.mode !== 'chat') return null
+  const mode = b.mode === 'explain' ? 'explain' : 'chat'
+  // 문장 설명은 첫 질문 하나로만 받는다. 대화가 길어지면 자유 질문으로 처리한다.
+  if (mode === 'explain' && messages.length !== 1) return null
+  return { mode, lang: b.lang, title, selection, selectionReading, paragraph, paragraphReading, messages }
 }
 
 function systemPrompt(b: Body) {
@@ -69,6 +75,14 @@ function systemPrompt(b: Body) {
   const en = [
     '학습자는 영어 입문~초급자야. 영어 예문은 쉽고 짧은 단어로 쓰고, 예문마다 한국어 뜻을 붙여 줘.',
   ]
+  const explain = [
+    '지금은 "문장 설명" 요청이야. 밑줄 친 부분을 아래 순서로 설명해. 각 제목은 **굵게** 한 줄로 쓰고, 전체는 8문장을 넘기지 마.',
+    '**뜻**: 자연스러운 한국어 번역 한 줄.',
+    b.lang === 'ja'
+      ? '**문법·표현**: 조사(は・が・を・に 등)와 활용(ます형·ない형·て형 등), 처음 보는 단어를 짧은 목록으로. 입문자 수준에 맞게 핵심 2~3개만 고르고 설명은 쉬운 한국어로.'
+      : '**문법·표현**: 시제, 어순, 자주 쓰는 구문, 처음 보는 단어를 짧은 목록으로. 입문~초급 수준에 맞게 핵심 2~3개만 고르고 설명은 쉬운 한국어로.',
+    '**한 줄 팁**: 비슷한 문장을 만들 때 기억할 점 한 가지.',
+  ]
   const ctx = [
     `글 제목: ${b.title}`,
     `밑줄 친 부분: ${b.selection}`,
@@ -76,7 +90,7 @@ function systemPrompt(b: Body) {
     `밑줄이 있는 문단: ${b.paragraph}`,
     ...(b.paragraphReading ? [`문단 읽는 법: ${b.paragraphReading}`] : []),
   ]
-  return [...common, ...(b.lang === 'ja' ? ja : en), '', '<context>', ...ctx, '</context>'].join('\n')
+  return [...common, ...(b.lang === 'ja' ? ja : en), ...(b.mode === 'explain' ? explain : []), '', '<context>', ...ctx, '</context>'].join('\n')
 }
 
 Deno.serve(async (req) => {
@@ -121,7 +135,7 @@ Deno.serve(async (req) => {
     const client = new Anthropic({ apiKey })
     const res = await client.messages.create({
       model: MODEL,
-      max_tokens: MAX_TOKENS,
+      max_tokens: body.mode === 'explain' ? 600 : MAX_TOKENS,
       thinking: { type: 'disabled' },
       system: systemPrompt(body),
       messages: body.messages,

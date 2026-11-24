@@ -35,7 +35,7 @@ Supabase 프로젝트의 SQL Editor에 `migrations/*.sql`을 **파일 이름 순
 
 비밀번호와 service_role key는 저장소에 넣지 않아요. 앱에는 Project URL 과 anon key 만 써요.
 
-## 밑줄 질문 (Edge Function `ask`)
+## 밑줄 질문·문장 설명 (Edge Function `ask`)
 읽기 화면에서 밑줄 친 부분을 Claude에게 물어보는 기능이에요. 앱이 Anthropic 에 직접 가지 않고, `functions/ask` 가 서버에서 키를 가지고 대신 호출해요.
 
 - 키(`ANTHROPIC_API_KEY`)는 **Supabase secrets 에만** 둬요. 앱, 저장소, `.env` 에는 넣지 않아요.
@@ -43,6 +43,8 @@ Supabase 프로젝트의 SQL Editor에 `migrations/*.sql`을 **파일 이름 순
 - 남용 방지: 하루 40번(`ASK_DAILY_LIMIT`)과 2초 간격을 `take_ask_quota` 가 세요. 질문 내용은 저장하지 않고 횟수만 저장해요.
 - 모델은 `claude-haiku-5-5` (가장 빠르고 싼 최신 모델, 입력 $0.10 / 출력 $0.50 per 1M 토큰). `ASK_MODEL` 로 바꿀 수 있어요.
 - 함수가 없거나 인터넷이 없어도 앱은 "지금은 물어볼 수 없어요"만 보여 줘요.
+
+**문장 설명**: 읽기 화면에서 단어를 눌러 나오는 말풍선의 "문장 설명" 버튼을 누르면 그 단어가 든 문장에 밑줄을 긋고, 같은 `ask` 함수에 `mode: 'explain'` 으로 요청해요. 서버가 학습자 수준(일본어 입문=히라가나만, 영어 입문~초급)에 맞춰 **뜻 / 문법·표현 / 한 줄 팁** 순서로 한국어 설명을 돌려줘요(최대 600토큰). 설명은 밑줄 대화로 앱에 저장돼서, 같은 문장을 다시 열면 호출 없이 저장본을 보여 줘요. 하루 한도(40번)와 2초 간격은 자유 질문과 같이 세요. 서버 설정은 아래 그대로이며 새 마이그레이션이나 secret 은 필요 없어요.
 
 켜는 순서:
 1. SQL Editor 에서 `migrations/20261026090000_ask_quota.sql` 을 실행해요.
