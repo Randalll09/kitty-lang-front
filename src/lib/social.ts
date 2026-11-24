@@ -46,6 +46,8 @@ interface Cache {
   partnerId: string | null
   partnerName: string
   partnerDays: Record<string, PartnerDay>
+  /** 학습 언어별로 나눈 친구 기록. 공유 기록 화면에서 언어를 골라 볼 때 쓴다. */
+  partnerLangDays: Partial<Record<Lang, Record<string, PartnerDay>>>
   cheers: Cheer[]
   goals: Goal[]
   /** 아직 서버에 못 보낸 응원(오프라인에서 누른 것) */
@@ -70,6 +72,7 @@ const emptyCache = (): Cache => ({
   partnerId: null,
   partnerName: '',
   partnerDays: {},
+  partnerLangDays: {},
   cheers: [],
   goals: [],
   pending: [],
@@ -234,7 +237,7 @@ async function pull() {
     friendshipId: fr.data?.id ?? null,
     partnerId: fr.data ? (fr.data.user_a === me ? fr.data.user_b : fr.data.user_a) : null,
   }
-  if (!patch.partnerId) Object.assign(patch, { partnerName: '', partnerDays: {}, cheers: [], goals: [] })
+  if (!patch.partnerId) Object.assign(patch, { partnerName: '', partnerDays: {}, partnerLangDays: {}, cheers: [], goals: [] })
   set(patch)
   if (!state.partnerId) return
 
@@ -242,12 +245,15 @@ async function pull() {
   if (pp.error) throw pp.error
   const rows = await supabase
     .from('daily_progress')
-    .select('day, study_seconds, articles_read, words_reviewed, quiz_correct, quiz_total')
+    .select('day, language, study_seconds, articles_read, words_reviewed, quiz_correct, quiz_total')
     .eq('user_id', state.partnerId)
     .gte('day', addDays(today(), -WINDOW_DAYS))
   if (rows.error) throw rows.error
   const partnerDays: Record<string, PartnerDay> = {}
+  const partnerLangDays: SocialState['partnerLangDays'] = {}
   for (const r of rows.data) {
+    const l = (partnerLangDays[r.language as Lang] ??= {})
+    l[r.day] = { seconds: r.study_seconds, articles: r.articles_read, reviewed: r.words_reviewed, correct: r.quiz_correct, total: r.quiz_total }
     // 학습 언어가 둘 다 있는 날은 합친다.
     const d = (partnerDays[r.day] ??= { seconds: 0, articles: 0, reviewed: 0, correct: 0, total: 0 })
     d.seconds += r.study_seconds
@@ -274,7 +280,7 @@ async function pull() {
     goals.push({ ...g, progress: Number(p.data ?? 0) })
   }
 
-  set({ partnerName: pp.data?.display_name ?? '', partnerDays, cheers: ch.data as Cheer[], goals })
+  set({ partnerName: pp.data?.display_name ?? '', partnerDays, partnerLangDays, cheers: ch.data as Cheer[], goals })
 }
 
 let running: Promise<void> | null = null

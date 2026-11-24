@@ -6,6 +6,7 @@ import {
   sendCheer, signIn, signOut, signUp, signedIn, sync, unreadCheers, updateName, useSocial,
 } from '../lib/social'
 import { dayTotals } from '../lib/store'
+import { SharedStats } from '../components/SharedStats'
 import type { AppState } from '../types'
 
 const CHEERS: [CheerKind, string][] = [['cheer', '응원해요 📣'], ['nudge', '콕 찔러요 👉'], ['congrats', '축하해요 🎉']]
@@ -181,6 +182,8 @@ export function Together({ state }: { state: AppState }) {
               {sent || (social.pending.length ? `보낼 응원 ${social.pending.length}개 · 연결되면 보내요` : '')}
             </p>
           </div>
+
+          <SharedStats state={state} social={social} partnerName={pName} />
 
           <div className="card tg">
             <h2>받은 응원</h2>
